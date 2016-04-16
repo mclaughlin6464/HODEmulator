@@ -12,8 +12,8 @@ from multiprocessing import cpu_count
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_one_two_halo_decomp, wp
-
-from .redMagicHOD import RedMagicCens, RedMagicSats
+#TODO fix relative import
+from redMagicHOD import RedMagicCens, RedMagicSats
 
 #TODO argparse for simname
 simname = 'emu'
