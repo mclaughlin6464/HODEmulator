@@ -3,6 +3,8 @@
 #This file takes cached halo catalogs, populates them according to some HOD, and calculates the gg cross correlations
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set()
