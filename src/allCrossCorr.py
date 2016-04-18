@@ -18,7 +18,7 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_on
 from redMagicHOD import RedMagicCens, RedMagicSats
 
 #TODO argparse for simname
-simname = 'emu'
+simname = 'fox'
 
 outputdir = '/u/ki/swmclau2/des/HODOutput/%s/'%simname
 
