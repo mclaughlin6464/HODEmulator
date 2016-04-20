@@ -18,11 +18,12 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_on
 from redMagicHOD import RedMagicCens, RedMagicSats
 
 #TODO argparse for simname
-simname = 'fox'
+simname = 'multidark_highres'
 
 outputdir = '/u/ki/swmclau2/des/HODOutput/%s/'%simname
 
-scale_factors = [0.25,0.333,0.5,  0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0 ] #sf of emu and fox
+#scale_factors = [0.25,0.333,0.5,  0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0 ] #sf of emu and fox
+scale_factors = [0.25690, 0.34800, 0.49990, 0.53030, 0.65180, 0.71250,0.80370, 0.91000, 1.00110 ] #mdhr
 
 halocats = {}
 models = {}
@@ -67,25 +68,25 @@ for sf in scale_factors:
     data[sf] = (xi_all, xi_1h, xi_2h, wp_all)
 
 colors = cycle(sns.color_palette())
-fig = plt.figure(figsize = (15, 15))
+fig = plt.figure(figsize = (15, 7.5))
 
 for sf, color in zip(scale_factors, colors):
-    plt.subplot(211)
+    plt.subplot(121)
     rz = 1.0/sf -1
     plt.plot(rbin_centers, data[sf][0],
              label='$z = %.2f$'%rz, color=color)
     plt.plot(rbin_centers, data[sf][1], ls = '--', color = color)
     plt.plot(rbin_centers, data[sf][2], ls = '-.', color = color)
 
-    plt.subplot(221)
+    plt.subplot(122)
     plt.plot(rbin_centers, data[sf][3],
              label='$z = %.2f$'%rz,
              color= color )
 
-plt.subplot(211)
+plt.subplot(121)
 plt.title('Cross Correlations')
-plt.xlim(xmin = 0.1, xmax = 10)
-plt.ylim(ymin = 1, ymax = 1e4)
+#plt.xlim(xmin = 0.1, xmax = 10)
+#plt.ylim(ymin = 1, ymax = 1e4)
 plt.loglog()
 plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
@@ -93,10 +94,10 @@ plt.xlabel(r'$r $  $\rm{[Mpc]}$', fontsize=25)
 plt.ylabel(r'$\xi_{\rm gg}(r)$', fontsize=25)
 plt.legend(loc='best', fontsize=20)
 
-plt.subplot(221)
+plt.subplot(122)
 plt.title('Projected Cross Correlations')
-plt.xlim(xmin = 0.1, xmax = 10)
-plt.ylim(ymin = 0.5, ymax = 5e3)
+#plt.xlim(xmin = 0.1, xmax = 10)
+#plt.ylim(ymin = 0.5, ymax = 5e3)
 plt.loglog()
 plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
@@ -104,7 +105,8 @@ plt.xlabel(r'$r_{\rm p} $  $\rm{[Mpc]}$', fontsize=25)
 plt.ylabel(r'$w_{\rm p}(r_{\rm p})$', fontsize=25)
 plt.legend(loc='best', fontsize=20)
 
-plt.savefig(outputdir+'emu_xi.png')
+plt.suptitle(simname, fontsize = 20)
+plt.savefig(outputdir+'%s_xi.png'%simname)
 
 for sf in scale_factors:
     np.savetxt(outputdir+'xi_all_%.3f.npy'%sf, data[sf][0])
