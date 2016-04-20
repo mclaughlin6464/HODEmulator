@@ -6,18 +6,18 @@
 
 from halotools.sim_manager import RockstarHlistReader
 
-
-simname = 'multidark_highres'
+simname = 'emu'
 
 if simname == 'emu':
-    loc = '/nfs/slac/g/ki/ki22/cosmo/beckermr/tinkers_emu/Box000/halos/m200b/'
+    #TODO specify for which box since we have 40
+    #loc = '/nfs/slac/g/ki/ki22/cosmo/beckermr/tinkers_emu/Box000/halos/m200b/'
+    loc =  '/u/ki/swmclau2/des/emu/Box000/'
 
-    columns_to_keep = {'halo_id': (0, 'i8'), 'halo_upid': (1, 'i8'), 'halo_x': (8, 'f4'), 'halo_y': (9, 'f4'),
+    columns_to_keep = {'halo_id': (0, 'i8'), 'halo_upid': (41, 'i8'), 'halo_x': (8, 'f4'), 'halo_y': (9, 'f4'),
                        'halo_z': (10, 'f4')
         , 'halo_vx': (11, 'f4'), 'halo_vy': (12, 'f4'), 'halo_vz': (13, 'f4'), 'halo_mvir': (2, 'f4'),
                        'halo_rvir': (5, 'f4'), 'halo_rs': (6, 'f4')}  # what else?
 
-    simname = 'emu'
     halo_finder = 'rockstar'
     version_name = 'most_recent'
     Lbox = 1050.0
@@ -32,7 +32,6 @@ elif simname == 'fox':
                        'halo_z': (19, 'f4'), 'halo_vx': (20, 'f4'), 'halo_vy': (21, 'f4'), 'halo_vz': (22, 'f4'),
                        'halo_mvir': (10, 'f4'), 'halo_rvir': (11, 'f4'), 'halo_rs': (12, 'f4')}
 
-    simname = 'fox'
     halo_finder = 'rockstar'
     version_name = 'most_recent'
     Lbox = 400.0
@@ -47,7 +46,6 @@ elif simname == 'multidark_highres':
                        'halo_z': (19, 'f4'), 'halo_vx': (20, 'f4'), 'halo_vy': (21, 'f4'), 'halo_vz': (22, 'f4'),
                        'halo_mvir': (10, 'f4'), 'halo_rvir': (11, 'f4'), 'halo_rs': (12, 'f4')}
 
-    simname = 'multidark_highres'
     halo_finder = 'rockstar'
     version_name = 'most_recent'
     Lbox = 1e3
