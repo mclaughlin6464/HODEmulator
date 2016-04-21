@@ -18,19 +18,23 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_on
 from redMagicHOD import RedMagicCens, RedMagicSats
 
 #TODO argparse for simname
-simname = 'multidark_highres'
+simname = 'multidark'
 
+#TODO make it is if doesn't exist.
 outputdir = '/u/ki/swmclau2/des/HODOutput/%s/'%simname
 
+#TODO logging of what the params are for a run.
+
 #scale_factors = [0.25,0.333,0.5,  0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0 ] #sf of emu and fox
-scale_factors = [0.25690, 0.34800, 0.49990, 0.53030, 0.65180, 0.71250,0.80370, 0.91000, 1.00110 ] #mdhr
+#scale_factors = [0.25690, 0.34800, 0.49990, 0.53030, 0.65180, 0.71250,0.80370, 0.91000, 1.00110 ] #mdhr
+scale_factors = [2.0/3.0, 1.0]#multidark
 
 halocats = {}
 models = {}
 for sf in scale_factors:
     rz = 1.0/sf-1
-    halocats[sf] = CachedHaloCatalog(simname = simname, halo_finder = 'rockstar',version_name = 'most_recent',redshift = rz)
-    #halocats[sf] = CachedHaloCatalog(simname = 'multidark', halo_finder = 'rockstar',redshift = rz)
+    #halocats[sf] = CachedHaloCatalog(simname = simname, halo_finder = 'rockstar',version_name = 'most_recent',redshift = rz)
+    halocats[sf] = CachedHaloCatalog(simname = 'multidark', halo_finder = 'rockstar',redshift = rz)
 
 
     models[sf] = HodModelFactory(

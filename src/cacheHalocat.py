@@ -13,7 +13,7 @@ if simname == 'emu':
     #loc = '/nfs/slac/g/ki/ki22/cosmo/beckermr/tinkers_emu/Box000/halos/m200b/'
     loc =  '/u/ki/swmclau2/des/emu/Box000/'
 
-    columns_to_keep = {'halo_id': (0, 'i8'), 'halo_upid': (41, 'i8'), 'halo_x': (8, 'f4'), 'halo_y': (9, 'f4'),
+    columns_to_keep = {'halo_id': (0, 'i8'), 'halo_upid': (36, 'i8'), 'halo_x': (8, 'f4'), 'halo_y': (9, 'f4'),
                        'halo_z': (10, 'f4')
         , 'halo_vx': (11, 'f4'), 'halo_vy': (12, 'f4'), 'halo_vz': (13, 'f4'), 'halo_mvir': (2, 'f4'),
                        'halo_rvir': (5, 'f4'), 'halo_rs': (6, 'f4')}  # what else?
