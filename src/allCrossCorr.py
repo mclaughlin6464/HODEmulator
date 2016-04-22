@@ -45,7 +45,7 @@ for sf in scale_factors:
 
 #NOTE replace sf with a?
 for sf in scale_factors:
-    models[sf].populate_mock(halocats[sf], Num_ptcl_requirement = 30)
+    models[sf].populate_mock(halocats[sf], Num_ptcl_requirement = 30) #TODO try again with 300 or a larger number for more robustness
 
 data = {}
 pi_max = 40
