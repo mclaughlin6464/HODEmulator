@@ -67,14 +67,14 @@ class OutList(Cat):
 
 class Emu(OutList):
     #TODO define as Box000
-    #Actually could subclass boxes.
+    #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
 
         defaults = {'simname': 'emu', 'loc':'/u/ki/swmclau2/des/emu/Box000/',
                     'Lbox':1050.0,'pmass':3.9876e10,
                     'filenames':['out_%d.list' % i for i in xrange(10)],
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
-
+        #TODO move this step to the superclass
         for key, value in defaults.iteritems():
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
@@ -110,5 +110,30 @@ class MDHR(Hlist):
             kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
 
         super(self, MDHR).__init__(self, **kwargs)
+
+class Chinchilla(Hlist):
+
+    #Lbox and npart are required!
+    def __init__(self,Lbox, npart, **kwargs):
+        from glob import glob
+        #NOTE not sure if loc should be in default, or pmass for that matter
+        defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/'}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        #TODO make a set of valid version_names
+
+        kwargs['version_name'] = 'Lb%d-%d'%(int(Lbox), npart )
+        kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(Lbox), npart )
+        #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
+        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        #TODO write code that makes it so when I pass in a particular sf the filenames are also cut down.
+        #TODO also write it so that if filenames is not as long as sf throw an error
+        kwargs['filenames'] = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
+        kwargs['scale_factors'] = [float(fname[len(kwargs['loc'])+6:-5] for fname in fnames)] #pull out scale factors
+        kwargs['pmass'] =  #TODO figure out general relationship of params and pmass
+
 
 cat_dict = {'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR}
