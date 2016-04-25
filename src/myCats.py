@@ -174,7 +174,7 @@ class Chinchilla(Hlist):
                 assert a in tmp_scale_factors
                 kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
 
-        kwargs['pmass']*((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
+        kwargs['pmass']*=((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
         #TODO check this is right for all sims
 
         super(Chinchilla, self).__init__(**kwargs)
