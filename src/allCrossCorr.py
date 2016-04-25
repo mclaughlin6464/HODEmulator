@@ -20,6 +20,7 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 #RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
+#TODO this isn't a cross correlation calculation; rename!
 def crossCorr(simname, scale_factor, outputdir, plot = False,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements

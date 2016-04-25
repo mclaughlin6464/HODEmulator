@@ -29,7 +29,7 @@ class Cat(object):
         for i, fname in enumerate(self.filenames):
             self.filenames[i] = self.loc+fname
 
-        assert len(self.filenames) == len(self.redshifts)
+        assert (len(self.filenames) == len(self.redshifts) ) or len(self.filenames) == 0 #built ins have no filenames
         assert len(self.scale_factors) == len(self.redshifts)
 
         self.cache_locs =['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5'%(a, self.simname)
