@@ -150,7 +150,7 @@ class Chinchilla(Hlist):
         kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(kwargs['Lbox']), kwargs['npart'] )
         fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
         fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        tmp_scale_factors = [float(fname[6:-5] for fname in fnames)] #pull out scale factors
+        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
 
         #if the user passed in stuff, have to check a bunch of things
         if 'filenames' not in kwargs:
