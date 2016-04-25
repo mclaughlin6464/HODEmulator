@@ -1,7 +1,6 @@
 #!/bin/bash
 #@Author: Sean McLaughlin
 #This module caches a halocat at a given location.
-#TODO make this handle arguements?
 #Don't know if that's something I'd want this to be capable of.
 
 import argparse

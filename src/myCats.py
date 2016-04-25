@@ -38,6 +38,21 @@ class Cat(object):
     def __len__(self):
         return len(self.filenames)
 
+    def __str__(self):
+        output = []
+        output.append(self.simname)
+        output.append('-'*25)
+        output.append('Halo finder:\t %s'%self.halo_finder)
+        output.append('Version name:\t%s'%self.version_name)
+        output.append('Redshifts:\t%s'%str(self.redshifts))
+        output.append('-'*25)
+        output.append('Location:\t%s'%self.loc)
+        output.append('Lbox:\t%.1f'%self.Lbox)
+        output.append('Particle Mass:\t%f'%self.pmass)
+        output.append('Columns to Keep:\n%s'%str(self.columns_to_keep))
+
+        return '\n'.join(output)
+
 class Hlist(Cat):
 
     def __init__(self,**kwargs):
@@ -67,6 +82,17 @@ class OutList(Cat):
             kwargs['simname'] = 'Outlist'
 
         super(OutList,self).__init__(**kwargs)
+
+class Multidark(Cat):
+    'Builtin, so needs very little. Will never be cached!'
+    def __init__(self, **kwargs):
+        if 'simname' not in kwargs or kwargs['simname'] is None:
+            kwargs['simname'] = 'multidark'
+
+        if 'scale_factors' not in kwargs or kwargs['scale_factors'] is None:
+            kwargs['scale_factors'] = [2.0/3, 1.0]
+
+        super(Multidark, self).__init__(**kwargs)
 
 class Emu(OutList):
     #TODO define as Box000
@@ -175,7 +201,6 @@ class Chinchilla(Hlist):
                 kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
 
         kwargs['pmass']*=((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
-        #TODO check this is right for all sims
 
         super(Chinchilla, self).__init__(**kwargs)
 

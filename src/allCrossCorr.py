@@ -7,13 +7,14 @@ import argparse
 from multiprocessing import cpu_count
 from os.path import isdir
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
+from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_one_two_halo_decomp, wp
 #TODO fix relative import
 from redMagicHOD import RedMagicCens, RedMagicSats
 from myCats import *
 
-N_PTCL = 30
+N_PTCL = 300
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.25, 15)
@@ -33,6 +34,8 @@ def allCrossCorr(simname, outputdir, plot = False, **kwargs):
 def _crossCorr(cat, scale_factor, outputdir, plot = False):
     'Helper function that uses the built in cat object'
 
+    print str(cat)
+
     if not isdir(outputdir):
         raise IOError("%s is not a directory"%outputdir)
 
@@ -46,9 +49,9 @@ def _crossCorr(cat, scale_factor, outputdir, plot = False):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=Zheng07Cens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=Zheng07Sats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
