@@ -4,7 +4,7 @@
 #Introducting a little heirarchy to reduce copy-pasting seems like a good idea to me, if a little overkill
 #important object at the end is the cat_dict, which links simnames to the objects here.
 
-__all__ = ['Emu', 'Fox', 'MDHR', 'cat_dict']
+__all__ = ['Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 
 class Cat(object):
 
@@ -28,6 +28,9 @@ class Cat(object):
         self.filenames = filenames
         for i, fname in enumerate(self.filenames):
             self.filenames[i] = self.loc+fname
+
+        assert len(self.filenames) == len(self.redshifts)
+        assert len(self.scale_factors) == len(self.redshifts)
 
         self.cache_locs =['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5'%(a, self.simname)
                                     for a in self.scale_factors]
@@ -74,7 +77,7 @@ class Emu(OutList):
                     'Lbox':1050.0,'pmass':3.9876e10,
                     'filenames':['out_%d.list' % i for i in xrange(10)],
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
-        #TODO move this step to the superclass
+
         for key, value in defaults.iteritems():
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
@@ -114,26 +117,70 @@ class MDHR(Hlist):
 class Chinchilla(Hlist):
 
     #Lbox and npart are required!
-    def __init__(self,Lbox, npart, **kwargs):
+    def __init__(self, **kwargs):
+
+        assert 'Lbox' in kwargs and 'npart' in kwargs
+
         from glob import glob
         #NOTE not sure if loc should be in default, or pmass for that matter
-        defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/'}
+        defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
+                    'pmass':  1.44390e+08} #mass for 125-1024}
+        #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
 
         for key, value in defaults.iteritems():
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        #TODO make a set of valid version_names
+        valid_version_names = set(['Lb125-1024','Lb125-2048','Lb250-1024','Lb250-128',
+                                   'Lb250-196','Lb250-2048', 'Lb250-2560', 'Lb250-320',
+                                   'Lb250-512', 'Lb250-768', 'Lb250-85', 'Lb400-1024',
+                                   'Lb400-136', 'Lb400-2048', 'Lb400-210', 'Lb400-315',
+                                   'Lb400-512', 'Lb400-768'])
 
-        kwargs['version_name'] = 'Lb%d-%d'%(int(Lbox), npart )
-        kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(Lbox), npart )
-        #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
+        if 'version_name' not in kwargs:
+            kwargs['version_name'] = 'Lb%d-%d'%(int(kwargs['Lbox']), kwargs['npart'] )
+        else:# check version name is legit
+            split_vname = kwargs['version_name'].split('-')
+            assert int(split_vname[0][2:]) == kwargs['Lbox']
+            assert int(split_vname[1]) == kwargs['npart']
+
+        assert kwargs['version_name'] in valid_version_names
+            #raise ValueError('%s is not a valid version of %s'%(kwargs['version_name'], kwargs['simname']))
+
+        kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(kwargs['Lbox']), kwargs['npart'] )
         fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
-        #TODO write code that makes it so when I pass in a particular sf the filenames are also cut down.
-        #TODO also write it so that if filenames is not as long as sf throw an error
-        kwargs['filenames'] = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        kwargs['scale_factors'] = [float(fname[len(kwargs['loc'])+6:-5] for fname in fnames)] #pull out scale factors
-        kwargs['pmass'] =  #TODO figure out general relationship of params and pmass
+        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[len(kwargs['loc'])+6:-5] for fname in fnames)] #pull out scale factors
+
+        #if the user passed in stuff, have to check a bunch of things
+        if 'filenames' not in kwargs:
+            kwargs['filenames'] = fnames
+        elif 'scale_factors' in kwargs:#don't know why this case would ever be true
+            assert len(kwargs['filenames'] ) == len(kwargs['scale_factors'])
+            for kw_fname in kwargs['filenames']:
+                assert kw_fname in fnames
+            #do nothing, we're good.
+        else:
+            kwargs['scale_factors'] = []
+            for kw_fname in kwargs['filenames']:
+                assert kw_fname in fnames
+                kwargs['scale_factors'].append(tmp_scale_factors[fnames.index(kw_fname)]) #get teh matching scale factor
+
+        if 'scale_factors' not in kwargs:
+            kwargs['scale_factors'] = tmp_scale_factors
+        else: #Don't have to do the both case, covered above
+            kwargs['filenames'] = []
+            for a in kwargs['scale_factors']:
+                assert a in tmp_scale_factors
+                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+
+        kwargs['pmass']*((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
+        #TODO check this is right for all sims
+
+        super(self, Chinchilla).__init__(self, **kwargs)
+
+        self.cache_locs = ['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5' % (a, self.simname, self.version_name)
+                           for a in self.scale_factors] #make sure we don't have redunancies.
 
 
-cat_dict = {'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR}
+cat_dict = {'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla}
