@@ -51,7 +51,7 @@ class Hlist(Cat):
         if 'simname' not in kwargs or kwargs['simname'] is None:
             kwargs['simname'] = 'Hlist'
 
-        super(Hlist,self).__init__(self, **kwargs)
+        super(Hlist,self).__init__(**kwargs)
 
 class OutList(Cat):
 
@@ -66,7 +66,7 @@ class OutList(Cat):
         if 'simname' not in kwargs or kwargs['simname'] is None:
             kwargs['simname'] = 'Outlist'
 
-        super(OutList,self).__init__(self, **kwargs)
+        super(OutList,self).__init__(**kwargs)
 
 class Emu(OutList):
     #TODO define as Box000
@@ -82,7 +82,7 @@ class Emu(OutList):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        super(Emu,self).__init__(self, **kwargs)
+        super(Emu,self).__init__(**kwargs)
 
 class Fox(Hlist):
 
@@ -96,7 +96,7 @@ class Fox(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        super(Fox, self).__init__(self, **kwargs)
+        super(Fox, self).__init__(**kwargs)
 
 class MDHR(Hlist):
 
@@ -112,7 +112,7 @@ class MDHR(Hlist):
         if 'filenames' not in kwargs or kwargs['filenames'] is None:
             kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
 
-        super(MDHR,self).__init__(self, **kwargs)
+        super(MDHR,self).__init__(**kwargs)
 
 class Chinchilla(Hlist):
 
@@ -177,7 +177,7 @@ class Chinchilla(Hlist):
         kwargs['pmass']*((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
         #TODO check this is right for all sims
 
-        super(Chinchilla, self).__init__(self, **kwargs)
+        super(Chinchilla, self).__init__(**kwargs)
 
         self.cache_locs = ['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5' % (a, self.simname, self.version_name)
                            for a in self.scale_factors] #make sure we don't have redunancies.
