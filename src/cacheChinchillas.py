@@ -23,3 +23,4 @@ for boxsize, npart in boxsize_npart: #see what I did there?
     except:
         print 'An error occured for %.2f, %d'%(boxsize, npart)
         continue
+        #raise
