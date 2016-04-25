@@ -89,6 +89,9 @@ class Multidark(Cat):
         if 'simname' not in kwargs or kwargs['simname'] is None:
             kwargs['simname'] = 'multidark'
 
+        if 'version_name' not in kwargs or kwargs['version_name'] is None:
+            kwargs['version_name'] = 'halotools_alpha_version2'
+
         if 'scale_factors' not in kwargs or kwargs['scale_factors'] is None:
             kwargs['scale_factors'] = [2.0/3, 1.0]
 
