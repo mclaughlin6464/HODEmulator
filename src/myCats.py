@@ -11,7 +11,7 @@ class Cat(object):
     def __init__(self, simname = 'Cat',
                  loc = '', columns_to_keep = {},
                  halo_finder = 'rockstar', version_name = 'most_recent',
-                 Lbox = 1.0, pmass = 1.0, scale_factors = [], filenames = []):
+                 Lbox = 1.0, pmass = 1.0, scale_factors = [], filenames = [], **kwargs):
 
         self.simname = simname
         self.loc = loc
