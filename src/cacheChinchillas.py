@@ -14,6 +14,7 @@ outputdir = '/u/ki/swmclau2/des/HODOutput/chinchilla/'
 
 for boxsize, npart in boxsize_npart: #see what I did there?
     try:
+        print boxsize, npart
         cacheHalocat(simname, Lbox = boxsize, npart = npart, scale_factors = [scale_factor])
         new_output = outputdir+ 'Lb%d-%d/'%(int(boxsize), npart)
         if not path.isdir(new_output):
