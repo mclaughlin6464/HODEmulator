@@ -4,7 +4,7 @@
 #Introducting a little heirarchy to reduce copy-pasting seems like a good idea to me, if a little overkill
 #important object at the end is the cat_dict, which links simnames to the objects here.
 
-__all__ = ['Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 
 class Cat(object):
 
@@ -96,6 +96,20 @@ class Multidark(Cat):
             kwargs['scale_factors'] = [2.0/3, 1.0]
 
         super(Multidark, self).__init__(**kwargs)
+        
+class Bolshoi(Cat):
+    'Builtin, so needs very little. Will never be cached!'
+    def __init__(self, **kwargs):
+        if 'simname' not in kwargs or kwargs['simname'] is None:
+            kwargs['simname'] = 'bolshoi'
+
+        if 'version_name' not in kwargs or kwargs['version_name'] is None:
+            kwargs['version_name'] = 'halotools_alpha_version2'
+
+        if 'scale_factors' not in kwargs or kwargs['scale_factors'] is None:
+            kwargs['scale_factors'] = [1.0]
+
+        super(Bolshoi, self).__init__(**kwargs)
 
 class Emu(OutList):
     #TODO define as Box000
@@ -211,4 +225,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 
-cat_dict = {'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla}
+cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla}
