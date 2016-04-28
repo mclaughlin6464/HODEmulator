@@ -55,10 +55,6 @@ def _crossCorr(cat, scale_factor, outputdir, plot = False):
         satellites_occupation=Zheng07Sats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin']-=1 #TODO delete me
-    #move the regime up a bit
-    model.param_dict['logM0']-=1
-
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
 
