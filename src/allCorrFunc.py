@@ -19,10 +19,12 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 #RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
-def corrFunc(simname, scale_factor, outputdir, plot = False,  **kwargs):
+#TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
+#Could pass in a dict and update the param dict
+def corrFunc(simname, scale_factor, outputdir, plot = False,f_c = 0.19,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
-    _corrFunc(cat, scale_factor, outputdir, plot)
+    _corrFunc(cat, scale_factor, outputdir, plot, f_c = f_c)
 
 def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
@@ -30,7 +32,7 @@ def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     for a in cat.scale_factors:
         _corrFunc(cat, a, outputdir, plot)
 
-def _corrFunc(cat, scale_factor, outputdir, plot = False):
+def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     'Helper function that uses the built in cat object'
 
     print str(cat)
@@ -53,6 +55,8 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False):
         satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
+    model.param_dict['f_c'] = f_c
+
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
 
@@ -72,10 +76,10 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False):
 
     wp_all = wp(pos, RBINS, PI_MAX, period=model.mock.Lbox, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f.npy' % scale_factor, xi_all)
-    np.savetxt(outputdir + 'xi_1h_%.3f.npy' % scale_factor, xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f.npy' % scale_factor, xi_2h)
-    np.savetxt(outputdir + 'wp_all_%.3f.npy' % scale_factor, wp_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_all)
+    np.savetxt(outputdir + 'xi_1h_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_1h)
+    np.savetxt(outputdir + 'xi_2h_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_2h)
+    np.savetxt(outputdir + 'wp_all_%.3f_fc_%.2f.npy' %(scale_factor,f_c), wp_all)
 
 if __name__ == '__main__':
     desc = 'Populate a particular halo catalog and calculate cross correlations. '
