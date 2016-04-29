@@ -3,6 +3,7 @@
 #This module contains the components of the Red Magic HOD, a subclass of the Zheng07 HOD built into halotools.
 
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
+import numpy as np
 
 class RedMagicCens(Zheng07Cens):
     """Slight tweak of the Zheng model to add a new parameter, f_c
@@ -10,7 +11,6 @@ class RedMagicCens(Zheng07Cens):
     #TODO what meaning does Luminosity threshold hold here?
     def __init__(self,**kwargs):
 
-        upper_occupation_bound = 1.0
         super(RedMagicCens,self).__init__(**kwargs)
 
         if 'f_c' not in self.param_dict:
@@ -23,16 +23,6 @@ class RedMagicCens(Zheng07Cens):
 class RedMagicSats(Zheng07Sats):
     "Slight tweak of Zheng model to add new parameter, f_c"
 
-    def __init__(self, **kwargs):
-
-        upper_occupation_bound = float("inf")
-        super(RedMagicSats,self).__init__(**kwargs)
-
-        #TODO not sure if this will work for the whole model; will need to test
-        #may need to 'modulate'
-        #if 'f_c' not in self.param_dict:
-        #    self.param_dict['f_c'] = 0.19 #add in best fit of new param.
-
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
         f_c = 1
@@ -40,3 +30,47 @@ class RedMagicSats(Zheng07Sats):
             f_c = self.param_dict['f_c']
 
         return super(RedMagicSats,self).mean_occupation(**kwargs)/f_c
+
+class StepFuncCens(Zheng07Cens):
+    "Testing HOD that is a step function for centrals"
+    def __init__(self, **kwargs):
+        upper_occupation_bound = 1.0
+        super(RedMagicCens, self).__init__(**kwargs)
+        self.param_dict['logMmin'] = 7e12#200 Chinchilla particles
+
+    def mean_occupation(self, **kwargs):
+        "See Zheng07 for details"
+        if 'table' in kwargs.keys():
+            mass = kwargs['table'][self.prim_haloprop_key]
+        elif 'prim_haloprop' in kwargs.keys():
+            mass = kwargs['prim_haloprop']
+        else:
+            msg = ("\nYou must pass either a ``table`` or ``prim_haloprop`` argument \n"
+                   "to the ``mean_occupation`` function of the ``StepFuncCens`` class.\n")
+            raise RuntimeError(msg)
+        mass = np.array(mass)
+        if np.shape(mass) == ():
+            mass = np.array([mass])
+
+        Mmin = 10*self.param_dict['logMmin']
+
+        return np.array(mass > Mmin, dtype = int)
+
+class StepFuncSats(Zheng07Sats):
+    "Testing HOD that is 0 for satellites"
+
+    def mean_occupation(self, **kwargs):
+        "See Zheng07 for details"
+        if 'table' in kwargs.keys():
+            mass = kwargs['table'][self.prim_haloprop_key]
+        elif 'prim_haloprop' in kwargs.keys():
+            mass = kwargs['prim_haloprop']
+        else:
+            msg = ("\nYou must pass either a ``table`` or ``prim_haloprop`` argument \n"
+                   "to the ``mean_occupation`` function of the ``StepFuncCens`` class.\n")
+            raise RuntimeError(msg)
+        mass = np.array(mass)
+        if np.shape(mass) == ():
+            mass = np.array([mass])
+
+        return np.zeros_like(mass)
