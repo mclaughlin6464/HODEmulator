@@ -2,8 +2,8 @@
 #Tmp helper script i'm writing to cache and cross-correlate all the chinchillas there are.
 
 from os import mkdir, path
-from cacheHalocat import cacheHalocat
-from allCrossCorr import crossCorr
+from ..src.cacheHalocat import cacheHalocat
+from ..src.allCorrFunc import corrFunc
 
 simname = 'chinchilla'
 boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 128), (250.0, 196), (250.0, 2048),
@@ -19,7 +19,7 @@ for boxsize, npart in boxsize_npart: #see what I did there?
         new_output = outputdir+ 'Lb%d-%d/'%(int(boxsize), npart)
         if not path.isdir(new_output):
             mkdir(new_output)
-        crossCorr(simname, scale_factor, new_output, Lbox = boxsize, npart = npart)
+        corrFunc(simname, scale_factor, new_output, Lbox = boxsize, npart = npart)
     except:
         print 'An error occured for %.2f, %d'%(boxsize, npart)
         continue

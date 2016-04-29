@@ -10,9 +10,8 @@ from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPh
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_one_two_halo_decomp, wp
-#TODO fix relative import
-from redMagicHOD import RedMagicCens, RedMagicSats
-from myCats import *
+from .redMagicHOD import RedMagicCens, RedMagicSats
+from .myCats import *
 
 N_PTCL = 300
 PI_MAX = 40
@@ -20,19 +19,18 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 #RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
-#TODO this isn't a cross correlation calculation; rename!
-def crossCorr(simname, scale_factor, outputdir, plot = False,  **kwargs):
+def corrFunc(simname, scale_factor, outputdir, plot = False,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
-    _crossCorr(cat, scale_factor, outputdir, plot)
+    _corrFunc(cat, scale_factor, outputdir, plot)
 
-def allCrossCorr(simname, outputdir, plot = False, **kwargs):
+def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
     cat = cat_dict[simname](**kwargs) #TODO better handling or arguements
     for a in cat.scale_factors:
-        _crossCorr(cat, a, outputdir, plot)
+        _corrFunc(cat, a, outputdir, plot)
 
-def _crossCorr(cat, scale_factor, outputdir, plot = False):
+def _corrFunc(cat, scale_factor, outputdir, plot = False):
     'Helper function that uses the built in cat object'
 
     print str(cat)
@@ -50,9 +48,9 @@ def _crossCorr(cat, scale_factor, outputdir, plot = False):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        centrals_occupation=Zheng07Cens(redshift=cat.redshifts[idx]),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        satellites_occupation=Zheng07Sats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
     #Note: slow
@@ -91,4 +89,4 @@ if __name__ == '__main__':
     # TODO do I want to have an advanced CLI? Connect to kwargs at all?
     args = parser.parse_args()
 
-    allCrossCorr(args.simname, args.outputdir, args.plot)
+    allCorrFunc(args.simname, args.outputdir, args.plot)
