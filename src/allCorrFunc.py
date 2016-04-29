@@ -10,8 +10,8 @@ from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPh
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_one_two_halo_decomp, wp
-from .redMagicHOD import RedMagicCens, RedMagicSats
-from .myCats import *
+from redMagicHOD import RedMagicCens, RedMagicSats
+from myCats import *
 
 N_PTCL = 300
 PI_MAX = 40
