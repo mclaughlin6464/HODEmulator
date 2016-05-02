@@ -13,7 +13,7 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_on
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-N_PTCL = 100
+N_PTCL = 300 
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.25, 15)
@@ -51,14 +51,12 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
-        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    #model.param_dict['f_c'] = f_c
+    #model.param_dict['logMmin'] = 13.1 
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -69,6 +67,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
     xi_all = tpcf(pos, RBINS, period = model.mock.Lbox, num_threads =  cpu_count())
+    print model.mock.Lbox
 
     halo_hostid = model.mock.galaxy_table['halo_id']
 
@@ -79,10 +78,10 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     wp_all = wp(pos, RBINS, PI_MAX, period=model.mock.Lbox, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_all)
-    np.savetxt(outputdir + 'xi_1h_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f_fc_%.2f.npy' %(scale_factor,f_c), xi_2h)
-    np.savetxt(outputdir + 'wp_all_%.3f_fc_%.2f.npy' %(scale_factor,f_c), wp_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_default.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
+    np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
+    np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
     desc = 'Populate a particular halo catalog and calculate cross correlations. '
