@@ -22,13 +22,15 @@ def haloCorr(simname, scale_factor, outputdir,  **kwargs):
 def _haloCorr(cat, scale_factor, outputdir):
     'Helper function that uses the built in cat object'
     RBINS = np.logspace(-1, 1.25, 15)
+    redshift = 1.0/scale_factor - 1.0
 
     #Note: Confusing name between cat and halocat. Consider changing.
-    halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
+    halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = redshift)
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
-    x, y, z = [halocat.halo_table[c] for c in ['halo_x','halo_y','halo_z'] ]
+    ht = halocat.halo_table[halocat.halo_table['halo_mvir'] > 1e10]
+    x, y, z = [ht[c] for c in ['halo_x','halo_y','halo_z'] ]
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
     xi_all = tpcf(pos, RBINS, period = halocat.Lbox, num_threads =  cpu_count())
@@ -48,8 +50,8 @@ if __name__ == '__main__':
                         help='The directory to store the outputs of the calculations. ')
 
     args = parser.parse_args()
-
-    haloCorr(args.simname, 1.0, args.outputdir)
+    #TODO remove kwargs
+    haloCorr(args.simname, 1.0, args.outputdir, Lbox = 250.0, npart = 2560)
 
 
 
