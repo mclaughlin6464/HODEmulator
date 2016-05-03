@@ -29,9 +29,9 @@ def _haloCorr(cat, scale_factor, outputdir):
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
-    ht = halocat.halo_table[halocat.halo_table['halo_mvir'] > 1e10]
-    x, y, z = [ht[c] for c in ['halo_x','halo_y','halo_z'] ]
-    pos = return_xyz_formatted_array(x,y,z)
+    sample_mask = halocat.halo_table['halo_mvir'] > 7e12
+    x, y, z = [halocat.halo_table[c] for c in ['halo_x','halo_y','halo_z'] ]
+    pos = return_xyz_formatted_array(x,y,z, mask = sample_mask)
     #TODO N procs
     xi_all = tpcf(pos, RBINS, period = halocat.Lbox, num_threads =  cpu_count())
 
