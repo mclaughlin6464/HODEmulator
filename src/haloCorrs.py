@@ -21,6 +21,7 @@ def haloCorr(simname, scale_factor, outputdir,  **kwargs):
 
 def _haloCorr(cat, scale_factor, outputdir):
     'Helper function that uses the built in cat object'
+    h = 0.7
     RBINS = np.logspace(-1, 1.25, 15)
     redshift = 1.0/scale_factor - 1.0
 
@@ -33,7 +34,7 @@ def _haloCorr(cat, scale_factor, outputdir):
     #Now, calculate with Halotools builtin
     #TODO include the fast version
     sample_mask = np.logical_and(halocat.halo_table['halo_mvir'] > 7e12, halocat.halo_table['halo_upid'] == -1)
-    x, y, z = [halocat.halo_table[c] for c in ['halo_x','halo_y','halo_z'] ]
+    x, y, z = [halocat.halo_table[c]*h for c in ['halo_x','halo_y','halo_z'] ] # change units to Mpc/h
     pos = return_xyz_formatted_array(x,y,z, mask = sample_mask)
     #TODO N procs
     print cat
