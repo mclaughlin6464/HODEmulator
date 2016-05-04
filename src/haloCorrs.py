@@ -32,7 +32,7 @@ def _haloCorr(cat, scale_factor, outputdir):
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
-    sample_mask = np.logical_and(np.halocat.halo_table['halo_mvir'] > 7e12, np.halocat.halo_table['halo_upid'] == -1)
+    sample_mask = np.logical_and(halocat.halo_table['halo_mvir'] > 7e12, halocat.halo_table['halo_upid'] == -1)
     x, y, z = [halocat.halo_table[c] for c in ['halo_x','halo_y','halo_z'] ]
     pos = return_xyz_formatted_array(x,y,z, mask = sample_mask)
     #TODO N procs
