@@ -51,9 +51,9 @@ def _galCorr(cat, scale_factor, outputdir):
 
     np.savetxt(outputdir + 'xi_all_gal_%.3f_ht.npy' %(scale_factor), xi_all)
 
-    xi_all = correlation3d(pos, RBINS, model.mock.Lbox)
+    #xi_all = correlation3d(pos, RBINS, model.mock.Lbox)
 
-    np.savetxt(outputdir + 'xi_all_gal_%.3f_yao.npy' %(scale_factor), xi_all)
+    #np.savetxt(outputdir + 'xi_all_gal_%.3f_yao.npy' %(scale_factor), xi_all)
 
 if __name__ == '__main__':
     desc = 'Calculate the correlation function for galaxies.  '
