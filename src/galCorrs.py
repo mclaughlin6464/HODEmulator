@@ -25,6 +25,7 @@ def galCorr(simname, scale_factor, outputdir,  **kwargs):
 
 def _galCorr(cat, scale_factor, outputdir):
     'Helper function that uses the built in cat object'
+    h = 0.7
     RBINS = np.logspace(-1, 1.25, 15)
     redshift = 1.0/scale_factor - 1.0
 
@@ -35,21 +36,21 @@ def _galCorr(cat, scale_factor, outputdir):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = redshift)
 
     model = HodModelFactory(
-            centrals_occupation=StepFuncCens(redshift=redshift),
+            centrals_occupation=RedMagicCens(redshift=redshift),
             centrals_profile=TrivialPhaseSpace(redshift=redshift),
-            satellites_occupation=StepFuncSats(redshift=redshift),
+            satellites_occupation=RedMagicSats(redshift=redshift),
             satellites_profile=NFWPhaseSpace(redshift=redshift))
 
     model.populate_mock(halocat) #default NPTCL
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
-    x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
+    x, y, z = [model.mock.galaxy_table[c]*h for c in ['x','y','z'] ]
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
-    xi_all = tpcf(pos, RBINS, period = model.mock.Lbox, num_threads =  cpu_count())
+    xi_all = tpcf(pos, RBINS, period = model.mock.Lbox*h, num_threads =  cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_gal_%.3f_ht.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_all_gal_%.3f_ht_h.npy' %(scale_factor), xi_all)
 
     #xi_all = correlation3d(pos, RBINS, model.mock.Lbox)
 
