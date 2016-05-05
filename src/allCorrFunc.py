@@ -34,7 +34,7 @@ def allCorrFunc(simname, outputdir, plot = False, **kwargs):
 
 def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     'Helper function that uses the built in cat object'
-
+    h = -.7 #TODO attach a cosmology to the cats, for now this quick fix for testing.
     print str(cat)
     print 'Min Num Particles: %d'%N_PTCL
 
@@ -63,10 +63,10 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
-    x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
+    x, y, z = [model.mock.galaxy_table[c]*h for c in ['x','y','z'] ]
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
-    xi_all = tpcf(pos, RBINS, period = model.mock.Lbox, num_threads =  cpu_count())
+    xi_all = tpcf(pos, RBINS, period = model.mock.Lbox*h, num_threads =  cpu_count())
     print model.mock.Lbox
 
     halo_hostid = model.mock.galaxy_table['halo_id']
