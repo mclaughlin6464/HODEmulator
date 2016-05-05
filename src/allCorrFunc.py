@@ -34,7 +34,7 @@ def allCorrFunc(simname, outputdir, plot = False, **kwargs):
 
 def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     'Helper function that uses the built in cat object'
-    h = -.7 #TODO attach a cosmology to the cats, for now this quick fix for testing.
+    h = 0.7 #TODO attach a cosmology to the cats, for now this quick fix for testing.
     print str(cat)
     print 'Min Num Particles: %d'%N_PTCL
 
