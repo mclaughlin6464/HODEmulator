@@ -4,6 +4,8 @@
 #Introducting a little heirarchy to reduce copy-pasting seems like a good idea to me, if a little overkill
 #important object at the end is the cat_dict, which links simnames to the objects here.
 
+from astropy import cosmology
+
 __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 
 class Cat(object):
@@ -11,7 +13,8 @@ class Cat(object):
     def __init__(self, simname = 'Cat',
                  loc = '', columns_to_keep = {},
                  halo_finder = 'rockstar', version_name = 'most_recent',
-                 Lbox = 1.0, pmass = 1.0, scale_factors = [], filenames = [], **kwargs):
+                 Lbox = 1.0, pmass = 1.0, scale_factors = [], cosomology = cosmology.WMAP5,
+                 filenames = [], **kwargs):
 
         self.simname = simname
         self.loc = loc
@@ -24,6 +27,9 @@ class Cat(object):
         self.pmass = pmass
         self.scale_factors = scale_factors
         self.redshifts = [1.0/a-1 for a in self.scale_factors] #TODO let user pass in redshift and get a
+
+        self.cosmology = cosmology#default cosmology
+        self.h = cosmology.H(0).value/100.0
 
         self.filenames = filenames
         for i, fname in enumerate(self.filenames):
@@ -44,6 +50,7 @@ class Cat(object):
         output.append('-'*25)
         output.append('Halo finder:\t %s'%self.halo_finder)
         output.append('Version name:\t%s'%self.version_name)
+        output.append('Cosmology:\n%s'%self.cosmology)
         output.append('Redshifts:\t%s'%str(self.redshifts))
         output.append('-'*25)
         output.append('Location:\t%s'%self.loc)
@@ -113,6 +120,7 @@ class Bolshoi(Cat):
 
 class Emu(OutList):
     #TODO define as Box000
+    #TODO cosmology NOT implemented!
     #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
 
@@ -133,6 +141,7 @@ class Fox(Hlist):
         defaults = {'simname':'fox', 'loc': '/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'Lbox': 400.0, 'pmass': 6.58298e8,
                     'filenames': ['hlist_%d' % n for n in [46, 57, 73, 76, 79, 82, 86, 90, 95, 99]],
+                    'cosmology': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
                     'scale_factors': [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
         for key, value in defaults.iteritems():
@@ -167,6 +176,7 @@ class Chinchilla(Hlist):
         from glob import glob
         #NOTE not sure if loc should be in default, or pmass for that matter
         defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
+                    'cosmology': cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
                     'pmass':  1.44390e+08} #mass for 125-1024}
         #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
 
