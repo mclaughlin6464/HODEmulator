@@ -25,6 +25,7 @@ def _haloCorr(cat, scale_factor, outputdir):
 
     print cat
 
+
     if outputdir[-1] != '/':
         outputdir+='/'
 
