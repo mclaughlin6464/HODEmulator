@@ -41,7 +41,7 @@ def _galCorr(cat, scale_factor, outputdir):
             satellites_occupation=StepFuncSats(redshift=redshift),
             satellites_profile=NFWPhaseSpace(redshift=redshift))
 
-    model.populate_mock(halocat) #default NPTCL
+    model.populate_mock(halocat, Num_ptcl_requirement = 30)
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version

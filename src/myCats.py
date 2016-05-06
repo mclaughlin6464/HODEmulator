@@ -5,8 +5,15 @@
 #important object at the end is the cat_dict, which links simnames to the objects here.
 
 from astropy import cosmology
+from socket import gethostname
 
 __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
+
+hostname = gethostname()
+KILS = hostname[:-2] == 'ki-ls'
+
+#if KILS:
+#    default_locs = {}
 
 class Cat(object):
 
