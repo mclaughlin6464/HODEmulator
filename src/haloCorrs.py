@@ -32,14 +32,14 @@ def _haloCorr(cat, scale_factor, outputdir):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = redshift)
 
     #Now, calculate with Halotools builtin
-    sample_mask = halocat.halo_table['halo_mvir'] > 7e12/h#, halocat.halo_table['halo_upid'] == -1)
+    sample_mask = np.logical_and(halocat.halo_table['halo_mvir'] > 7e12/h, halocat.halo_table['halo_upid'] == -1)
     x, y, z = [halocat.halo_table[c] for c in ['halo_x','halo_y','halo_z'] ] # change units to Mpc/h
     pos = return_xyz_formatted_array(x,y,z, mask = sample_mask)
     #TODO N procs
 
     xi_all = tpcf(pos*h, RBINS, period = halocat.Lbox*h, num_threads =  cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_halo_%.3f_h_sh.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_all_halo_%.3f_h_nosh.npy' %(scale_factor), xi_all)
 
 if __name__ == '__main__':
     desc = 'Calculate the correlation function for halos.  '

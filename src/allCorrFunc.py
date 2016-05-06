@@ -56,7 +56,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
         satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    #model.param_dict['logMmin'] = 13.1 
+    model.param_dict['logMmin'] = 13.1 
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -77,7 +77,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
     '''
-    np.savetxt(outputdir + 'xi_all_%.3f_default.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_highMinMass.npy' %(scale_factor), xi_all)
 
     #np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
     #np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
