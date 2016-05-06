@@ -12,8 +12,25 @@ __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
 
-#if KILS:
-#    default_locs = {}
+#set filepaths depending on which cluster we're on.
+if KILS:
+    default_locs = {'emu':'/u/ki/swmclau2/des/emu/Box000/',
+                    'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
+                    'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
+                    'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/' }
+
+    cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
+                  'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
+
+else:
+
+    default_locs = {'emu': '/scratch/users/swmclau2/hlists/emu/Box000/',
+                    'fox': '/scratch/users/swmclau2/hlists/Fox',
+                    'multidark_highres': '/scratch/users/swmclau2/hlists/MDHR',
+                    'chinchilla': '/scratch/users/swmclau2/hlists/Chinchilla'}
+
+    cache_locs = {'cat': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s.hdf5',
+                  'chinchilla': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s_%s.hdf5'}
 
 class Cat(object):
 
@@ -45,7 +62,7 @@ class Cat(object):
         assert (len(self.filenames) == len(self.redshifts) ) or len(self.filenames) == 0 #built ins have no filenames
         assert len(self.scale_factors) == len(self.redshifts)
 
-        self.cache_locs =['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5'%(a, self.simname)
+        self.cache_locs =[cache_locs['cat']%(a, self.simname)
                                     for a in self.scale_factors]
 
     def __len__(self):
@@ -131,7 +148,7 @@ class Emu(OutList):
     #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
 
-        defaults = {'simname': 'emu', 'loc':'/u/ki/swmclau2/des/emu/Box000/',
+        defaults = {'simname': 'emu', 'loc':default_locs['emu'],
                     'Lbox':1050.0,'pmass':3.9876e10,
                     'filenames':['out_%d.list' % i for i in xrange(10)],
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
@@ -145,7 +162,7 @@ class Emu(OutList):
 class Fox(Hlist):
 
     def __init__(self, **kwargs):
-        defaults = {'simname':'fox', 'loc': '/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
+        defaults = {'simname':'fox', 'loc': default_locs['fox'],
                     'Lbox': 400.0, 'pmass': 6.58298e8,
                     'filenames': ['hlist_%d' % n for n in [46, 57, 73, 76, 79, 82, 86, 90, 95, 99]],
                     'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
@@ -160,7 +177,7 @@ class Fox(Hlist):
 class MDHR(Hlist):
 
     def __init__(self, **kwargs):
-        defaults = {'simname': 'multidark_highres', 'loc': '/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
+        defaults = {'simname': 'multidark_highres', 'loc': default_locs['multidark_highres'],
                     'Lbox': 1e3, 'pmass': 8.721e9,
                     'scale_factors': [0.25690, 0.34800, 0.49990, 0.53030, 0.65180, 0.71250, 0.80370, 0.91000, 1.00110]}
 
@@ -182,7 +199,7 @@ class Chinchilla(Hlist):
 
         from glob import glob
         #NOTE not sure if loc should be in default, or pmass for that matter
-        defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
+        defaults = {'simname':'chinchilla', 'loc': default_locs['chinchilla'],
                     'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
                     'pmass':  1.44390e+08} #mass for 125-1024}
         #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
@@ -238,8 +255,7 @@ class Chinchilla(Hlist):
 
         super(Chinchilla, self).__init__(**kwargs)
 
-        self.cache_locs = ['/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5' % (a, self.simname, self.version_name)
+        self.cache_locs = [cache_locs['chinchilla']% (a, self.simname, self.version_name)
                            for a in self.scale_factors] #make sure we don't have redunancies.
-
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla}
