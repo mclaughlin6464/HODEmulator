@@ -13,7 +13,7 @@ class Cat(object):
     def __init__(self, simname = 'Cat',
                  loc = '', columns_to_keep = {},
                  halo_finder = 'rockstar', version_name = 'most_recent',
-                 Lbox = 1.0, pmass = 1.0, scale_factors = [], cosomology = cosmology.WMAP5,
+                 Lbox = 1.0, pmass = 1.0, scale_factors = [], cosmo = cosmology.WMAP5(),
                  filenames = [], **kwargs):
 
         self.simname = simname
@@ -28,8 +28,8 @@ class Cat(object):
         self.scale_factors = scale_factors
         self.redshifts = [1.0/a-1 for a in self.scale_factors] #TODO let user pass in redshift and get a
 
-        self.cosmology = cosmology#default cosmology
-        self.h = cosmology.H(0).value/100.0
+        self.cosmology = cosmo#default cosmology
+        self.h = self.cosmology.H(0).value/100.0
 
         self.filenames = filenames
         for i, fname in enumerate(self.filenames):
