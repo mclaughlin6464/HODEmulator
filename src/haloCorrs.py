@@ -25,7 +25,6 @@ def _haloCorr(cat, scale_factor, outputdir):
 
     print cat
 
-
     if outputdir[-1] != '/':
         outputdir+='/'
 
@@ -40,7 +39,7 @@ def _haloCorr(cat, scale_factor, outputdir):
 
     xi_all = tpcf(pos*h, RBINS, period = halocat.Lbox*h, num_threads =  cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_halo_%.3f_h.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_all_halo_%.3f_h_sh.npy' %(scale_factor), xi_all)
 
 if __name__ == '__main__':
     desc = 'Calculate the correlation function for halos.  '
