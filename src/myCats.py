@@ -13,7 +13,7 @@ class Cat(object):
     def __init__(self, simname = 'Cat',
                  loc = '', columns_to_keep = {},
                  halo_finder = 'rockstar', version_name = 'most_recent',
-                 Lbox = 1.0, pmass = 1.0, scale_factors = [], cosmo = cosmology.WMAP5(),
+                 Lbox = 1.0, pmass = 1.0, scale_factors = [], cosmo = cosmology.WMAP5,
                  filenames = [], **kwargs):
 
         self.simname = simname
@@ -141,7 +141,7 @@ class Fox(Hlist):
         defaults = {'simname':'fox', 'loc': '/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'Lbox': 400.0, 'pmass': 6.58298e8,
                     'filenames': ['hlist_%d' % n for n in [46, 57, 73, 76, 79, 82, 86, 90, 95, 99]],
-                    'cosmology': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
+                    'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
                     'scale_factors': [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
         for key, value in defaults.iteritems():
@@ -176,7 +176,7 @@ class Chinchilla(Hlist):
         from glob import glob
         #NOTE not sure if loc should be in default, or pmass for that matter
         defaults = {'simname':'chinchilla', 'loc':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
-                    'cosmology': cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
+                    'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
                     'pmass':  1.44390e+08} #mass for 125-1024}
         #TODO make it possible to do cuts on scale factor like "use only cats for z < 1".
 
