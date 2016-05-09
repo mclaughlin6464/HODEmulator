@@ -20,14 +20,15 @@ for simname, kwargs in sims.iteritems():
     print simname
     try:
         if len(kwargs) == 0:
-            cacheHalocat(simname, scale_factors = [scale_factor])
+            cacheHalocat(simname)
         else:
             for kw in kwargs:
+		#only do z = 0 for cinchillas
                 print kw
                 cacheHalocat(simname, scale_factors=[scale_factor], **kw)
         print
 
     except:
         print 'An error occured for %s'%simname
-        continue
-        #raise
+        #continue
+        raise
