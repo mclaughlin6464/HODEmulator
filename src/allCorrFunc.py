@@ -13,7 +13,7 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_on
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-N_PTCL = 30 
+N_PTCL = 0 
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.25, 15)

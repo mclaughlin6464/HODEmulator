@@ -11,7 +11,7 @@ __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-print KILS
+KILS = True #TODO fixme
 
 #set filepaths depending on which cluster we're on.
 if KILS:
@@ -59,9 +59,6 @@ class Cat(object):
         self.filenames = filenames
         for i, fname in enumerate(self.filenames):
             self.filenames[i] = self.loc+fname
-
-	print self.filenames
-	print self.redshifts
 
         assert (len(self.filenames) == len(self.redshifts) ) or len(self.filenames) == 0 #built ins have no filenames
         assert len(self.scale_factors) == len(self.redshifts)
