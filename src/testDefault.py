@@ -2,4 +2,4 @@
 from allCorrFunc import corrFunc
 
 simname = 'chinchilla'
-corrFunc(simname, 1.0, '/u/ki/swmclau2/des/HODOutput/%s_tests/'%simname, Lbox = 250.0, npart = 2560)
+corrFunc(simname, 1.0, '/u/ki/swmclau2/des/HODOutput/%s_tests/'%simname, Lbox = 125.0, npart = 2048)
