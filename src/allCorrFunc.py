@@ -75,13 +75,13 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
                     period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
                     max_sample_size = 1e7)
 
-    wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
+    #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     np.savetxt(outputdir + 'xi_all_%.3f_default.npy' %(scale_factor), xi_all)
 
     np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
     np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
-    np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
+    #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
     desc = 'Populate a particular halo catalog and calculate cross correlations. '
