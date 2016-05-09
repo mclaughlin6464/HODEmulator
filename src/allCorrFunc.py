@@ -56,7 +56,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
         satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin'] = 13.1 
+    #model.param_dict['logMmin'] = 13.1
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -67,7 +67,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
-    '''
+
     halo_hostid = model.mock.galaxy_table['halo_id']
 
     xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
@@ -76,12 +76,12 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
                     max_sample_size = 1e7)
 
     wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
-    '''
-    np.savetxt(outputdir + 'xi_all_%.3f_highMinMass.npy' %(scale_factor), xi_all)
 
-    #np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
-    #np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
-    #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_default.npy' %(scale_factor), xi_all)
+
+    np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
+    np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
+    np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
     desc = 'Populate a particular halo catalog and calculate cross correlations. '
