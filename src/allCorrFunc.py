@@ -19,36 +19,44 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 #RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
-#TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
-#Could pass in a dict and update the param dict
-def corrFunc(simname, scale_factor, outputdir, plot = False,f_c = 0.19,  **kwargs):
+def corrFunc(simname, scale_factor, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
-    cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
-    _corrFunc(cat, scale_factor, outputdir, plot, f_c = f_c)
-
-def allCorrFunc(simname, outputdir, plot = False, **kwargs):
-    'Calculates cross correlations for all scale factors cached for one halocatalog'
-    cat = cat_dict[simname](**kwargs) #TODO better handling or arguements
-    for a in cat.scale_factors:
-        _corrFunc(cat, a, outputdir, plot)
-
-def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
-    'Helper function that uses the built in cat object'
-
-    print str(cat)
-    print 'Min Num Particles: %d'%N_PTCL
 
     if not isdir(outputdir):
-        raise IOError("%s is not a directory"%outputdir)
+        raise IOError("%s is not a directory."%outputdir)
 
+    cat = cat_dict[simname](**kwargs)
+    print str(cat)
+    halocat, model = loadHaloAndModel(cat, scale_factor)
+    data = popAndCorr(halocat,model, cat, params, n_ptcl, rbins)
+
+    for d, name in zip(data, ['xi_all', 'xi_1h', 'xi_2h', 'wp_all']):
+        np.savetxt(outputdir + '%s_%.3f.npy' %(name, scale_factor), d)
+
+def allCorrFunc(simname, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
+    'Calculates cross correlations for all scale factors cached for one halocatalog'
+    if not isdir(outputdir):
+        raise IOError("%s is not a directory."%outputdir)
+
+    cat = cat_dict[simname](**kwargs)
+    print str(cat)
+    for a in cat.scale_factors:
+        halocat, model = loadHaloAndModel(cat, a)
+        data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+
+        for d, name in zip(data, ['xi_all', 'xi_1h', 'xi_2h', 'wp_all']):
+            np.savetxt(outputdir + '%s_%.3f.npy' % (name, a), d)
+
+def loadHaloAndModel(cat, scale_factor):
+    '''Return the cached halo catalog and the appropriate HOD model'''
     try:
         idx = cat.scale_factors.index(scale_factor)
     except:
         print 'Provided scale_factor %.3f not cached for %s.'%(scale_factor, cat.simname)
         raise
 
-    #Note: Confusing name between cat and halocat. Consider changing.
-    halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
+    halocat = CachedHaloCatalog(simname=cat.simname, halo_finder=cat.halo_finder, version_name=cat.version_name,
+                                redshift=cat.redshifts[idx])
 
     model = HodModelFactory(
         centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
@@ -56,32 +64,33 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
         satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin'] = 13.1/cat.h
+    return halocat, model
 
-    #Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
+def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
+    '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
+    print 'Min Num Particles: %d\t%d bins'%(n_ptcl, len(rbins))
+    model.update(params)#insert new params into model
+    # Note: slow
+    model.populate_mock(halocat,Num_ptcl_requirement=n_ptcl)
 
-    #Now, calculate with Halotools builtin
-    #TODO include the fast version
-    x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
-    pos = return_xyz_formatted_array(x,y,z)
-    #TODO N procs
-    xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+    # Now, calculate with Halotools builtin
+    # TODO include the fast version
+    x, y, z = [model.mock.galaxy_table[c] for c in ['x', 'y', 'z']]
+    pos = return_xyz_formatted_array(x, y, z)*cat.h
+    Lbox = model.mock.Lbox*cat.h #remember damn little h's
+
+    xi_all = tpcf(pos, rbins, period=Lbox, num_threads=cpu_count())#TODO change numthreads
 
     halo_hostid = model.mock.galaxy_table['halo_id']
 
-    xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
-                    halo_hostid, RBINS,
-                    period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
-                    max_sample_size = 1e7)
+    xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos,
+                                            halo_hostid, rbins,
+                                            period=Lbox, num_threads=cpu_count(),
+                                            max_sample_size=1e7)
 
-    #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
+    wp_all = wp(pos, rbins, PI_MAX, period=Lbox, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_highMinMass_125_2048.npy' %(scale_factor), xi_all)
-
-    np.savetxt(outputdir + 'xi_1h_%.3f_highMinMass.npy' %(scale_factor), xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f_highMinMass.npy' %(scale_factor), xi_2h)
-    #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
+    return xi_all, xi_1h, xi_2h, wp_all #TODO I don't need all these, use kwargs to determine which?
 
 if __name__ == '__main__':
     desc = 'Populate a particular halo catalog and calculate cross correlations. '
