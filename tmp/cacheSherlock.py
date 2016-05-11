@@ -1,7 +1,7 @@
 #!/bin/bash/
 #@Author Sean McLaughlin
 #This script will cache the hlists I've moved to Sherlock.
-from cacheHalocat import cacheHalocat
+from ..src.cacheHalocat import cacheHalocat
 
 sims = {}
 sims['emu'] = []#kwargs for each sim

@@ -5,7 +5,7 @@
 
 import argparse
 from halotools.sim_manager import RockstarHlistReader
-from myCats import *
+from .myCats import *
 
 def cacheHalocat(simname,  **kwargs):
 

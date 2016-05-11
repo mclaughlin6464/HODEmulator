@@ -10,7 +10,7 @@ from multiprocessing import cpu_count
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf
 
-from myCats import *
+from ..src.myCats import *
 
 def haloCorr(simname, scale_factor, outputdir,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
