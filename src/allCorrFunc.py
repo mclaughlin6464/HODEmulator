@@ -70,7 +70,8 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     #TODO N procs
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
-    #xi_all, xi_cov = tpcf_jackknife(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+    #randoms = np.random.random(size=(pos.shape[0]*3, 3))*model.mock.Lbox*cat.h
+    #xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     halo_hostid = model.mock.galaxy_table['halo_id']
     '''
