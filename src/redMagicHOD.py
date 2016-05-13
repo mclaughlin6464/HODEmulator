@@ -36,7 +36,7 @@ class StepFuncCens(Zheng07Cens):
     def __init__(self, mMin = 7e12, h = 0.7, **kwargs):
         upper_occupation_bound = 1.0
         super(StepFuncCens, self).__init__(**kwargs)
-        print np.log10(mMin/h)
+        print 'logMmin: %e'%np.log10(mMin/h)
         self.param_dict['logMmin'] = np.log10(mMin/h)#200 Chinchilla particles
 
     def mean_occupation(self, **kwargs):
