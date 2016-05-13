@@ -73,19 +73,19 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     #xi_all, xi_cov = tpcf_jackknife(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     halo_hostid = model.mock.galaxy_table['halo_id']
-
+    '''
     xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
                     halo_hostid, RBINS,
                     period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
                     max_sample_size = 1e7)
-
+    '''
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048_mm_%2f.npy' %(scale_factor, mMin), xi_all)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
-    np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
+    #np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
+    #np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
