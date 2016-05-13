@@ -21,10 +21,10 @@ RBINS = np.logspace(-1, 1.7, 20)
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
 #Could pass in a dict and update the param dict
-def corrFunc(simname, scale_factor, outputdir, plot = False,f_c = 0.19,  **kwargs):
+def corrFunc(simname, scale_factor, outputdir, plot = False,mMin = 7e12,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
-    _corrFunc(cat, scale_factor, outputdir, plot, f_c = f_c)
+    _corrFunc(cat, scale_factor, outputdir, plot, mMin = mMin)
 
 def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
@@ -32,7 +32,7 @@ def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     for a in cat.scale_factors:
         _corrFunc(cat, a, outputdir, plot)
 
-def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
+def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     'Helper function that uses the built in cat object'
 
     print str(cat)
@@ -52,7 +52,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     model = HodModelFactory(
         #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
         #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
@@ -81,7 +81,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048.npy' %(scale_factor), xi_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048_mm_%2f.npy' %(scale_factor, mMin), xi_all)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
     np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
