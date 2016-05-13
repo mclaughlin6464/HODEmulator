@@ -9,14 +9,14 @@ from os.path import isdir
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
-from halotools.mock_observables import return_xyz_formatted_array, tpcf_jackknife, tpcf_one_two_halo_decomp, wp
+from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_one_two_halo_decomp, wp
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
 N_PTCL = 0 
 PI_MAX = 40
 
-RBINS = np.logspace(-1, 1.25, 15)
+RBINS = np.logspace(-1, 1.7, 20)
 #RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
@@ -51,12 +51,14 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
+        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin'] = 13.1/cat.h
+    #model.param_dict['logMmin'] = 13.1/cat.h
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -66,7 +68,9 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
     pos = return_xyz_formatted_array(x,y,z)
     #TODO N procs
-    xi_all, xi_cov = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+    xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+
+    #xi_all, xi_cov = tpcf_jackknife(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     halo_hostid = model.mock.galaxy_table['halo_id']
 
@@ -77,11 +81,11 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, f_c = 0.19):
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_highMinMass_125_2048.npy' %(scale_factor), xi_all)
-    np.savetxt(outputdir + 'xi_cov_%.3f_highMinMass_125_2048.npy' %(scale_factor), xi_cov)
+    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048.npy' %(scale_factor), xi_all)
+    #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
-    np.savetxt(outputdir + 'xi_1h_%.3f_highMinMass.npy' %(scale_factor), xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f_highMinMass.npy' %(scale_factor), xi_2h)
+    np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
+    np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
