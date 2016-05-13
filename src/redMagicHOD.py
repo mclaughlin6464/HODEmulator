@@ -54,6 +54,9 @@ class StepFuncCens(Zheng07Cens):
             mass = np.array([mass])
 
         Mmin = 10**self.param_dict['logMmin']
+        x = np.array(mass > Mmin, dtype = int)
+        print 'Array:'
+        print sum(x), x.shape
 
         return np.array(mass > Mmin, dtype = int)
 

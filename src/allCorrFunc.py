@@ -52,7 +52,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
 
     model = HodModelFactory(
         #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin),
+        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin, h = cat.h),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
         #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
@@ -73,7 +73,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
 
     #xi_all, xi_cov = tpcf_jackknife(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
-    halo_hostid = model.mock.galaxy_table['halo_id']
+    #halo_hostid = model.mock.galaxy_table['halo_id']
     '''
     xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
                     halo_hostid, RBINS,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                         help='The directory to store the outputs of the calculations. ')
     parser.add_argument('--plot', action = 'store_true',
                         help = 'Determine if plots should be saved along with the calculations.')
-    # TODO do I want to have an advanced CLI? Connect to kwargs at all?
+
     args = parser.parse_args()
 
     allCorrFunc(args.simname, args.outputdir, args.plot)
