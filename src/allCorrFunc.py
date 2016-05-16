@@ -66,7 +66,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     #Now, calculate with Halotools builtin
     #TODO include the fast version
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
-    #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
+    mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
     #TODO N procs
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
