@@ -17,14 +17,13 @@ N_PTCL = 0
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
-#RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
-#Could pass in a dict and update the param dict
+#See other branch
 def corrFunc(simname, scale_factor, outputdir, plot = False,logMmin = 12.1,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
-    cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
-    _corrFunc(cat, scale_factor, outputdir, plot, mMin = logMmin)
+    cat = cat_dict[simname](**kwargs)
+    _corrFunc(cat, scale_factor, outputdir, plot, logMmin = logMmin)
 
 def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
