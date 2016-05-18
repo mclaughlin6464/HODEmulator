@@ -27,7 +27,7 @@ def corrFunc(simname, scale_factor, outputdir, plot = False,logMmin = 12.1,  **k
 
 def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
-    cat = cat_dict[simname](**kwargs) #TODO better handling or arguements
+    cat = cat_dict[simname](**kwargs)
     for a in cat.scale_factors:
         _corrFunc(cat, a, outputdir, plot)
 
@@ -51,13 +51,13 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     model = HodModelFactory(
         centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin, h = cat.h),
+        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
         satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
         #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin'] = logMmin/cat.h #this is gonna have to obviously be changed when merged with the other branch.
+    model.param_dict['logMmin'] = logMmin - np.log10(cat.h) #this is gonna have to obviously be changed when merged with the other branch.
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -67,21 +67,21 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
     #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
-    #TODO N procs
-    #xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
+    #TODO N procs
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
+    #TODO ways to decide which of these to call
     #randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
     #xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     #halo_hostid = model.mock.galaxy_table['halo_id']
-    '''
-    xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
-                    halo_hostid, RBINS,
-                    period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
-                    max_sample_size = 1e7)
-    '''
+
+    #xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
+    #                halo_hostid, RBINS,
+    #                period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
+    #                max_sample_size = 1e7)
+
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     np.savetxt(outputdir + 'xi_all_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), xi_all)
