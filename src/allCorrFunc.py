@@ -9,7 +9,7 @@ from os.path import isdir
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
-from halotools.mock_observables import return_xyz_formatted_array, tpcf_jackknife, tpcf_one_two_halo_decomp, wp
+from halotools.mock_observables import return_xyz_formatted_array,tpcf,  tpcf_jackknife, tpcf_one_two_halo_decomp, wp
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
@@ -58,7 +58,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
         satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    #model.param_dict['logMmin'] = 13.1/cat.h
+    #model.param_dict['logMmin'] = 12.5/cat.h
 
     #Note: slow
     model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
@@ -66,13 +66,15 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     #Now, calculate with Halotools builtin
     #TODO include the fast version
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
-    mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
+    #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
     #TODO N procs
     #xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
-    randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
-    xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+    xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+
+    #randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
+    #xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     #halo_hostid = model.mock.galaxy_table['halo_id']
     '''
@@ -83,8 +85,8 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     '''
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048_mm_%.2f.npy' %(scale_factor, np.log10(mMin)), xi_all)
-    np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
+    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_mm_%.2f.npy' %(scale_factor,mMin), xi_all)
+    #np.savetxt(outputdir + 'xi_cov_%.3f_default.npy' %(scale_factor), xi_cov)
 
     #np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
     #np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
