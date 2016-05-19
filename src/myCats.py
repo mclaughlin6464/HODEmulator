@@ -145,13 +145,13 @@ class Bolshoi(Cat):
 
 class Emu(OutList):
     #TODO define as Box000
-    #TODO cosmology NOT implemented!
     #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
 
         defaults = {'simname': 'emu', 'loc':default_locs['emu'],
                     'Lbox':1050.0,'pmass':3.9876e10,
                     'filenames':['out_%d.list' % i for i in xrange(10)],
+                    'cosmo': cosmology.core.wCDM(H0 =  63.36569, Om0 = 0.340573, Ode0 = 0.659427, w0 = -0.816597), 
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
         for key, value in defaults.iteritems():
