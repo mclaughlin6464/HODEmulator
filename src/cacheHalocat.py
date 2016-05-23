@@ -25,6 +25,9 @@ if __name__ == '__main__':
                         help='The name of the simulation to cache. Defaults are stored in the myCats module.')
     #TODO do I want to have an advanced CLI? Connect to kwargs at all?
     #TODO add option to add scale factor. Want to cache just a = 1.0 for aardvark for now.
+    parser.add_argument('--scale_factor', type = float, help = 'Scale factor to cache. Default is all. ')
     args = parser.parse_args()
-
-    cacheHalocat(args.simname)
+    if args.scale_factor is None:
+        cacheHalocat(args.simname)
+    else:
+        cacheHalocat(args.simname, scale_factor = args.scale_factor)
