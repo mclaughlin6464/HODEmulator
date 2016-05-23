@@ -11,6 +11,8 @@ def cacheHalocat(simname,  **kwargs):
 
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
 
+    print str(cat)
+
     for i in xrange(len(cat)): #Pythonic iteration?
         reader = RockstarHlistReader(cat.filenames[i], cat.columns_to_keep, cat.cache_locs[i], cat.simname,
                                      cat.halo_finder, cat.redshifts[i],
@@ -30,4 +32,5 @@ if __name__ == '__main__':
     if args.scale_factor is None:
         cacheHalocat(args.simname)
     else:
+        print args.scale_factor
         cacheHalocat(args.simname, scale_factor = args.scale_factor)
