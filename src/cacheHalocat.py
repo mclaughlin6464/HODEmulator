@@ -33,4 +33,4 @@ if __name__ == '__main__':
         cacheHalocat(args.simname)
     else:
         print args.scale_factor
-        cacheHalocat(args.simname, scale_factor = args.scale_factor)
+        cacheHalocat(args.simname, scale_factor = [args.scale_factor])
