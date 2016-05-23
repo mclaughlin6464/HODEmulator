@@ -7,7 +7,7 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
@@ -19,7 +19,8 @@ if KILS:
                     'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
-                    'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists'}
+                    'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists',
+                    'guppy': '/nfs/slac/g/ki/ki23/des/jderose/BCC/Guppy/School/Guppy-1/Lb1050/output/halos'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -161,6 +162,22 @@ class Emu(OutList):
                 kwargs[key] = value
 
         super(Emu,self).__init__(**kwargs)
+
+class Guppy(OutList):
+
+    def __init__(self, **kwargs):
+
+        defaults = {'simname': 'guppy', 'loc':default_locs['guppy'],
+                    'Lbox':1050.0, 'pmass':3.45420e+10,
+                    'filenames':['out_%d.list'% i for i in xrange(10)],
+                    'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.6881, Om0=0.295, Ode0=0.705),
+                    'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        super(Guppy, self).__init__(**kwargs)
 
 class Fox(Hlist):
 
