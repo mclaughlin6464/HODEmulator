@@ -19,8 +19,8 @@ if KILS:
                     'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
-                    'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists',
-                    'guppy': '/nfs/slac/g/ki/ki23/des/jderose/BCC/Guppy/School/Guppy-1/Lb1050/output/halos'}
+                    'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
+                    'guppy': '/nfs/slac/g/ki/ki23/des/jderose/BCC/Guppy/School/Guppy-1/Lb1050/output/halos/'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -329,4 +329,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
-            'aardvark':Aardvark}
+            'aardvark':Aardvark,'guppy':Guppy}

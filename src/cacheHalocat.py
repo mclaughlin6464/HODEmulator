@@ -11,8 +11,6 @@ def cacheHalocat(simname,  **kwargs):
 
     cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
 
-    print str(cat)
-
     for i in xrange(len(cat)): #Pythonic iteration?
         reader = RockstarHlistReader(cat.filenames[i], cat.columns_to_keep, cat.cache_locs[i], cat.simname,
                                      cat.halo_finder, cat.redshifts[i],
@@ -26,11 +24,9 @@ if __name__ == '__main__':
     parser.add_argument('simname', metavar='simname', type=str,
                         help='The name of the simulation to cache. Defaults are stored in the myCats module.')
     #TODO do I want to have an advanced CLI? Connect to kwargs at all?
-    #TODO add option to add scale factor. Want to cache just a = 1.0 for aardvark for now.
     parser.add_argument('--scale_factor', type = float, help = 'Scale factor to cache. Default is all. ')
     args = parser.parse_args()
     if args.scale_factor is None:
         cacheHalocat(args.simname)
     else:
-        print args.scale_factor
-        cacheHalocat(args.simname, scale_factor = [args.scale_factor])
+        cacheHalocat(args.simname, scale_factors = [args.scale_factor])
