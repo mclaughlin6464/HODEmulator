@@ -85,6 +85,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
+    #TODO save them as pairs with r_bin_centers so I don't have to know what the bins were!
     np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_mm_%.2f.npy' %(scale_factor, logMmin), xi_all)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
