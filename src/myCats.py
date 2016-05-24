@@ -20,7 +20,7 @@ if KILS:
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
                     'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
-                    'guppy': '/nfs/slac/g/ki/ki23/des/jderose/BCC/Guppy/School/Guppy-1/Lb1050/output/halos/'}
+                    'guppy': '/u/ki/swmclau2/des/guppy/'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
