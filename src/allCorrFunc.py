@@ -50,11 +50,11 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
-        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
+        #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
     print logMmin, logMmin - np.log10(cat.h)
@@ -66,8 +66,8 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     #Now, calculate with Halotools builtin
     #TODO include the fast version
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
-    #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
-    pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
+    mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
+    pos = return_xyz_formatted_array(x,y,z, mask = mask)
 
     #TODO N procs
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
@@ -86,7 +86,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     #TODO save them as pairs with r_bin_centers so I don't have to know what the bins were!
-    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_mm_%.2f.npy' %(scale_factor, logMmin), xi_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), xi_all)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
     #np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
