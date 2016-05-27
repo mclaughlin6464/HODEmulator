@@ -51,11 +51,11 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx], mMin=mMin),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
-        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
+        #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
     #model.param_dict['logMmin'] = 13.1/cat.h
@@ -81,11 +81,11 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, mMin = 7e12):
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
-    np.savetxt(outputdir + 'xi_all_%.3f_stepFunc_400_2048_mm_%2f.npy' %(scale_factor, mMin), xi_all)
+    np.savetxt(outputdir + 'xi_all_%.3f_default.npy' %(scale_factor), xi_all)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
-    np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
-    np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
+    np.savetxt(outputdir + 'xi_1h_%.3f_default.npy' %(scale_factor), xi_1h)
+    np.savetxt(outputdir + 'xi_2h_%.3f_default.npy' %(scale_factor), xi_2h)
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':

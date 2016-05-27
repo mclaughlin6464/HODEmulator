@@ -11,7 +11,7 @@ __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-KILS = True #TODO fixme
+KILS = False #TODO fixme
 
 #set filepaths depending on which cluster we're on.
 if KILS:
