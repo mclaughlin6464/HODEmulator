@@ -88,6 +88,30 @@ class Cat(object):
 
         return '\n'.join(output)
 
+    def update_lists(self, user_kwargs, tmp_fnames, tmp_scale_factors ):
+        '''If the user passes in a scale factor or filename, we have to do some cropping'''
+        if 'filenames' not in user_kwargs:
+            user_kwargs['filenames'] = tmp_fnames
+        elif 'scale_factors' in user_kwargs:  # don't know why this case would ever be true
+            assert len(user_kwargs['filenames']) == len(user_kwargs['scale_factors'])
+            for kw_fname in user_kwargs['filenames']:
+                assert kw_fname in tmp_fnames
+                # do nothing, we're good.
+        else:
+            user_kwargs['scale_factors'] = []
+            for kw_fname in user_kwargs['filenames']:
+                assert kw_fname in tmp_fnames
+                user_kwargs['scale_factors'].append(
+                    tmp_scale_factors[tmp_fnames.index(kw_fname)])  # get teh matching scale factor
+
+        if 'scale_factors' not in user_kwargs:
+            user_kwargs['scale_factors'] = tmp_scale_factors
+        else:  # both case covered above.
+            user_kwargs['filenames'] = []
+            for a in user_kwargs['scale_factors']:
+                assert a in tmp_scale_factors
+                user_kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+
 class Hlist(Cat):
 
     def __init__(self,**kwargs):
@@ -161,6 +185,11 @@ class Emu(OutList):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
         super(Emu,self).__init__(**kwargs)
 
 class Guppy(OutList):
@@ -177,6 +206,11 @@ class Guppy(OutList):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
         super(Guppy, self).__init__(**kwargs)
 
 class Fox(Hlist):
@@ -192,6 +226,11 @@ class Fox(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
         super(Fox, self).__init__(**kwargs)
 
 class MDHR(Hlist):
@@ -205,8 +244,12 @@ class MDHR(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        if 'filenames' not in kwargs or kwargs['filenames'] is None:
-            kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
+        #if 'filenames' not in kwargs or kwargs['filenames'] is None:
+        #    kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = ['hlist_%.5f.list' % a for a in tmp_scale_factors]
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         super(MDHR,self).__init__(**kwargs)
 
@@ -229,33 +272,13 @@ class Aardvark(Hlist):
 
         from glob import glob
 
-        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
-        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
+        tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames] #pull out scale factors
 
         #Looked into a way to put this in the global init.
         #However, the amount of copy-pasting that would save would be minimal, it turns out.
-        if 'filenames' not in kwargs:
-            kwargs['filenames'] = fnames
-        elif 'scale_factors' in kwargs:  # don't know why this case would ever be true
-            assert len(kwargs['filenames']) == len(kwargs['scale_factors'])
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                # do nothing, we're good.
-        else:
-            kwargs['scale_factors'] = []
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                kwargs['scale_factors'].append(
-                    tmp_scale_factors[fnames.index(kw_fname)])  # get teh matching scale factor
-
-        if 'scale_factors' not in kwargs:
-            kwargs['scale_factors'] = tmp_scale_factors
-        else:   #both case covered above.
-            kwargs['filenames'] = []
-            for a in kwargs['scale_factors']:
-                assert a in tmp_scale_factors
-                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         super(Aardvark, self).__init__(**kwargs)
 
@@ -295,31 +318,12 @@ class Chinchilla(Hlist):
             #raise ValueError('%s is not a valid version of %s'%(kwargs['version_name'], kwargs['simname']))
 
         kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(kwargs['Lbox']), kwargs['npart'] )
-        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
-        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
+        tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames] #pull out scale factors
 
         #if the user passed in stuff, have to check a bunch of things
-        if 'filenames' not in kwargs:
-            kwargs['filenames'] = fnames
-        elif 'scale_factors' in kwargs:#don't know why this case would ever be true
-            assert len(kwargs['filenames'] ) == len(kwargs['scale_factors'])
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-            #do nothing, we're good.
-        else:
-            kwargs['scale_factors'] = []
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                kwargs['scale_factors'].append(tmp_scale_factors[fnames.index(kw_fname)]) #get teh matching scale factor
-
-        if 'scale_factors' not in kwargs:
-            kwargs['scale_factors'] = tmp_scale_factors
-        else: #Don't have to do the both case, covered above
-            kwargs['filenames'] = []
-            for a in kwargs['scale_factors']:
-                assert a in tmp_scale_factors
-                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         kwargs['pmass']*=((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
 
