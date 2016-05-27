@@ -7,7 +7,7 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
@@ -18,7 +18,9 @@ if KILS:
     default_locs = {'emu':'/u/ki/swmclau2/des/emu/Box000/',
                     'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
-                    'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/' }
+                    'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
+                    'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
+                    'guppy': '/u/ki/swmclau2/des/guppy/'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -50,6 +52,7 @@ class Cat(object):
         self.version_name = version_name
         self.Lbox = Lbox
         self.pmass = pmass
+
         self.scale_factors = scale_factors
         self.redshifts = [1.0/a-1 for a in self.scale_factors] #TODO let user pass in redshift and get a
 
@@ -145,13 +148,13 @@ class Bolshoi(Cat):
 
 class Emu(OutList):
     #TODO define as Box000
-    #TODO cosmology NOT implemented!
     #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
 
         defaults = {'simname': 'emu', 'loc':default_locs['emu'],
                     'Lbox':1050.0,'pmass':3.9876e10,
                     'filenames':['out_%d.list' % i for i in xrange(10)],
+                    'cosmo': cosmology.core.wCDM(H0 =  63.36569, Om0 = 0.340573, Ode0 = 0.659427, w0 = -0.816597), 
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
         for key, value in defaults.iteritems():
@@ -159,6 +162,22 @@ class Emu(OutList):
                 kwargs[key] = value
 
         super(Emu,self).__init__(**kwargs)
+
+class Guppy(OutList):
+
+    def __init__(self, **kwargs):
+
+        defaults = {'simname': 'guppy', 'loc':default_locs['guppy'],
+                    'Lbox':1050.0, 'pmass':3.45420e+10,
+                    'filenames':['out_%d.list'% i for i in xrange(10)],
+                    'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.6881, Om0=0.295, Ode0=0.705),
+                    'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        super(Guppy, self).__init__(**kwargs)
 
 class Fox(Hlist):
 
@@ -190,6 +209,56 @@ class MDHR(Hlist):
             kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
 
         super(MDHR,self).__init__(**kwargs)
+
+# NOTE not sure how to subclass this. It's like a less complex Chinchilla.
+# could roll both of them under a BCC class or just leave them separate.
+# Will start writing for now and see what happens as I proceed.
+
+class Aardvark(Hlist):
+
+    #Lbox technically required, but I don't even have access to anything besides 400. Ignore for now.
+    def __init__(self, **kwargs):
+
+        defaults = {'simname':'aardvark', 'loc': default_locs['aardvark'],
+                    'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.73, Om0=0.23, Ode0=0.77, Ob0=0.047),
+                    'pmass':4.75619e+08, 'Lbox':400.0}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        from glob import glob
+
+        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
+
+        #Looked into a way to put this in the global init.
+        #However, the amount of copy-pasting that would save would be minimal, it turns out.
+        if 'filenames' not in kwargs:
+            kwargs['filenames'] = fnames
+        elif 'scale_factors' in kwargs:  # don't know why this case would ever be true
+            assert len(kwargs['filenames']) == len(kwargs['scale_factors'])
+            for kw_fname in kwargs['filenames']:
+                assert kw_fname in fnames
+                # do nothing, we're good.
+        else:
+            kwargs['scale_factors'] = []
+            for kw_fname in kwargs['filenames']:
+                assert kw_fname in fnames
+                kwargs['scale_factors'].append(
+                    tmp_scale_factors[fnames.index(kw_fname)])  # get teh matching scale factor
+
+        if 'scale_factors' not in kwargs:
+            kwargs['scale_factors'] = tmp_scale_factors
+        else:   #both case covered above.
+            kwargs['filenames'] = []
+            for a in kwargs['scale_factors']:
+                assert a in tmp_scale_factors
+                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+
+        super(Aardvark, self).__init__(**kwargs)
+
 
 class Chinchilla(Hlist):
 
@@ -259,4 +328,5 @@ class Chinchilla(Hlist):
         self.cache_locs = [cache_locs['chinchilla']% (a, self.simname, self.version_name)
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
-cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla}
+cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
+            'aardvark':Aardvark,'guppy':Guppy}
