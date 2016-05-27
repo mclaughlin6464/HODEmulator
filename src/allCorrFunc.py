@@ -17,6 +17,7 @@ N_PTCL = 0
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
+RBIN_CENTERS = rbin_centers = (RBINS[1:]+RBINS[:-1])
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
 #See other branch
@@ -76,17 +77,19 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     #randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
     #xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
-    #halo_hostid = model.mock.galaxy_table['halo_id']
+    halo_hostid = model.mock.galaxy_table['halo_id']
 
-    #xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
-    #                halo_hostid, RBINS,
-    #                period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
-    #                max_sample_size = 1e7)
+    xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
+                    halo_hostid, RBINS,
+                    period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
+                    max_sample_size = 1e7)
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
+    output = np.stack(RBIN_CENTERS, xi_all, xi_1h, xi_2h)
+
     #TODO save them as pairs with r_bin_centers so I don't have to know what the bins were!
-    np.savetxt(outputdir + 'xi_all_%.3f_default_400_2048_mm_%.2f.npy' %(scale_factor, logMmin), xi_all)
+    np.savetxt(outputdir + 'corr_%.3f_default_400_2048_mm_%.2f.npy' %(scale_factor, logMmin), output)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
     #np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
