@@ -13,6 +13,8 @@ hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
 KILS = True #TODO fixme
 
+#TODO each cat should carry a default output script, to which specific information is added. 
+
 #set filepaths depending on which cluster we're on.
 if KILS:
     default_locs = {'emu':'/u/ki/swmclau2/des/emu/Box000/',
