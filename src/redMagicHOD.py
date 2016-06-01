@@ -33,11 +33,10 @@ class RedMagicSats(Zheng07Sats):
 
 class StepFuncCens(Zheng07Cens):
     "Testing HOD that is a step function for centrals"
-    def __init__(self, mMin = 7e12, h = 0.7, **kwargs):
+    def __init__(self, **kwargs):
         upper_occupation_bound = 1.0
         super(StepFuncCens, self).__init__(**kwargs)
-        print np.log10(mMin/h)
-        self.param_dict['logMmin'] = np.log10(mMin/h)#200 Chinchilla particles
+        self.param_dict['logMmin'] = 12.1-np.log10(0.7)#200 Chinchilla particles
 
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
@@ -54,6 +53,9 @@ class StepFuncCens(Zheng07Cens):
             mass = np.array([mass])
 
         Mmin = 10**self.param_dict['logMmin']
+        x = np.array(mass > Mmin, dtype = int)
+        print 'Array:'
+        print sum(x), x.shape
 
         return np.array(mass > Mmin, dtype = int)
 
