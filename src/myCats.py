@@ -110,7 +110,7 @@ class Cat(object):
             user_kwargs['filenames'] = []
             for a in user_kwargs['scale_factors']:
                 assert a in tmp_scale_factors
-                user_kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+                user_kwargs['filenames'].append(tmp_fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
 
 class Hlist(Cat):
 

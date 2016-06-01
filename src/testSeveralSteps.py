@@ -9,4 +9,4 @@ else:
 
 for m in [12.0 + i*0.25 for i in xrange(8)]:
     print 'Log Min Mass: %e'%m
-    corrFunc(simname, 1.0, '/u/ki/swmclau2/des/HODOutput/%s_step_tests/'%simname,logMmin = m, Lbox = 400.0, npart = 2048)
+    corrFunc(simname, 1.00110, '/u/ki/swmclau2/des/HODOutput/%s_step_tests/'%simname,logMmin = m, Lbox = 400.0, npart = 2048)
