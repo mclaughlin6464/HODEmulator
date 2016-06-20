@@ -7,11 +7,13 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
 KILS = False #TODO fixme
+
+#TODO each cat should carry a default output script, to which specific information is added. 
 
 #set filepaths depending on which cluster we're on.
 if KILS:
@@ -20,7 +22,8 @@ if KILS:
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
                     'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
-                    'guppy': '/u/ki/swmclau2/des/guppy/'}
+                    'guppy': '/u/ki/swmclau2/des/guppy/',
+                    'chinchilla1050':'/u/ki/swmclau2/des/rockstar_outputs/'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -87,6 +90,30 @@ class Cat(object):
         output.append('Columns to Keep:\n%s'%str(self.columns_to_keep))
 
         return '\n'.join(output)
+
+    def update_lists(self, user_kwargs, tmp_fnames, tmp_scale_factors ):
+        '''If the user passes in a scale factor or filename, we have to do some cropping'''
+        if 'filenames' not in user_kwargs:
+            user_kwargs['filenames'] = tmp_fnames
+        elif 'scale_factors' in user_kwargs:  # don't know why this case would ever be true
+            assert len(user_kwargs['filenames']) == len(user_kwargs['scale_factors'])
+            for kw_fname in user_kwargs['filenames']:
+                assert kw_fname in tmp_fnames
+                # do nothing, we're good.
+        else:
+            user_kwargs['scale_factors'] = []
+            for kw_fname in user_kwargs['filenames']:
+                assert kw_fname in tmp_fnames
+                user_kwargs['scale_factors'].append(
+                    tmp_scale_factors[tmp_fnames.index(kw_fname)])  # get teh matching scale factor
+
+        if 'scale_factors' not in user_kwargs:
+            user_kwargs['scale_factors'] = tmp_scale_factors
+        else:  # both case covered above.
+            user_kwargs['filenames'] = []
+            for a in user_kwargs['scale_factors']:
+                assert a in tmp_scale_factors
+                user_kwargs['filenames'].append(tmp_fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
 
 class Hlist(Cat):
 
@@ -161,7 +188,35 @@ class Emu(OutList):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
         super(Emu,self).__init__(**kwargs)
+
+class Chinchilla1050(OutList):
+
+    #pretty different from chinchilla, so for the time being writing as a separate object. 
+    def __init__(self, **kwargs):
+
+        defaults = {'simname': 'chinchilla1050', 'loc':default_locs['chinchilla1050'],
+                    'Lbox':1050.0, 'pmass':3.34881e+10,
+                    'filenames':['out_%d.list'% i for i in xrange(10)],
+                    'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
+                    'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        super(Chinchilla1050, self).__init__(**kwargs)
+
 
 class Guppy(OutList):
 
@@ -176,6 +231,11 @@ class Guppy(OutList):
         for key, value in defaults.iteritems():
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
+
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         super(Guppy, self).__init__(**kwargs)
 
@@ -192,6 +252,11 @@ class Fox(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
         super(Fox, self).__init__(**kwargs)
 
 class MDHR(Hlist):
@@ -205,8 +270,12 @@ class MDHR(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        if 'filenames' not in kwargs or kwargs['filenames'] is None:
-            kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
+        #if 'filenames' not in kwargs or kwargs['filenames'] is None:
+        #    kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = ['hlist_%.5f.list' % a for a in tmp_scale_factors]
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         super(MDHR,self).__init__(**kwargs)
 
@@ -229,33 +298,13 @@ class Aardvark(Hlist):
 
         from glob import glob
 
-        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
-        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
+        tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames] #pull out scale factors
 
         #Looked into a way to put this in the global init.
         #However, the amount of copy-pasting that would save would be minimal, it turns out.
-        if 'filenames' not in kwargs:
-            kwargs['filenames'] = fnames
-        elif 'scale_factors' in kwargs:  # don't know why this case would ever be true
-            assert len(kwargs['filenames']) == len(kwargs['scale_factors'])
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                # do nothing, we're good.
-        else:
-            kwargs['scale_factors'] = []
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                kwargs['scale_factors'].append(
-                    tmp_scale_factors[fnames.index(kw_fname)])  # get teh matching scale factor
-
-        if 'scale_factors' not in kwargs:
-            kwargs['scale_factors'] = tmp_scale_factors
-        else:   #both case covered above.
-            kwargs['filenames'] = []
-            for a in kwargs['scale_factors']:
-                assert a in tmp_scale_factors
-                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         super(Aardvark, self).__init__(**kwargs)
 
@@ -295,31 +344,12 @@ class Chinchilla(Hlist):
             #raise ValueError('%s is not a valid version of %s'%(kwargs['version_name'], kwargs['simname']))
 
         kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(kwargs['Lbox']), kwargs['npart'] )
-        fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
-        fnames = [fname[len(kwargs['loc']):] for fname in fnames] #just want the names in the dir
-        tmp_scale_factors = [float(fname[6:-5]) for fname in fnames] #pull out scale factors
+        tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
+        tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames] #just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames] #pull out scale factors
 
         #if the user passed in stuff, have to check a bunch of things
-        if 'filenames' not in kwargs:
-            kwargs['filenames'] = fnames
-        elif 'scale_factors' in kwargs:#don't know why this case would ever be true
-            assert len(kwargs['filenames'] ) == len(kwargs['scale_factors'])
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-            #do nothing, we're good.
-        else:
-            kwargs['scale_factors'] = []
-            for kw_fname in kwargs['filenames']:
-                assert kw_fname in fnames
-                kwargs['scale_factors'].append(tmp_scale_factors[fnames.index(kw_fname)]) #get teh matching scale factor
-
-        if 'scale_factors' not in kwargs:
-            kwargs['scale_factors'] = tmp_scale_factors
-        else: #Don't have to do the both case, covered above
-            kwargs['filenames'] = []
-            for a in kwargs['scale_factors']:
-                assert a in tmp_scale_factors
-                kwargs['filenames'].append(fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
 
         kwargs['pmass']*=((kwargs['Lbox']/125.0)**3)*((1024.0/kwargs['npart'])**3) #correct factor for right pmass
 
@@ -329,4 +359,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
-            'aardvark':Aardvark,'guppy':Guppy}
+        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050}
