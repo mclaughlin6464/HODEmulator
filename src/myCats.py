@@ -28,12 +28,13 @@ if KILS:
     CACHE_LOCS = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
 
-else:
+else: #On Sherlock
 
     DEFAULT_LOCS = {'emu': '/scratch/users/swmclau2/hlists/emu/Box000/',
                     'fox': '/scratch/users/swmclau2/hlists/Fox/',
                     'multidark_highres': '/scratch/users/swmclau2/hlists/MDHR/',
-                    'chinchilla': '/scratch/users/swmclau2/hlists/Chinchilla/'}
+                    'chinchilla': '/scratch/users/swmclau2/hlists/Chinchilla/',
+                    'emu200': '/scratch/PI/kipac/yymao/highres_emu/Box000/hlists/'}
 
     CACHE_LOCS = {'cat': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -185,7 +186,7 @@ class Bolshoi(Cat):
 
         super(Bolshoi, self).__init__(**kwargs)
 
-class Emu(Cat):
+class Emu(OutList):
     #TODO define as Box000
     #Actually could subclass boxes. Or with Chichilla, handle that as version info
     def __init__(self, **kwargs):
@@ -230,7 +231,7 @@ class Chinchilla1050(OutList):
         super(Chinchilla1050, self).__init__(**kwargs)
 
 
-class Guppy(Cat):
+class Guppy(OutList):
 
     def __init__(self, **kwargs):
 
@@ -251,7 +252,7 @@ class Guppy(Cat):
 
         super(Guppy, self).__init__(**kwargs)
 
-class Fox(Cat):
+class Fox(Hlist):
 
     def __init__(self, **kwargs):
         defaults = {'simname':'fox', 'loc': DEFAULT_LOCS['fox'],
@@ -271,7 +272,7 @@ class Fox(Cat):
 
         super(Fox, self).__init__(**kwargs)
 
-class MDHR(Cat):
+class MDHR(Hlist):
 
     def __init__(self, **kwargs):
         defaults = {'simname': 'multidark_highres', 'loc': DEFAULT_LOCS['multidark_highres'],
@@ -295,7 +296,7 @@ class MDHR(Cat):
 # could roll both of them under a BCC class or just leave them separate.
 # Will start writing for now and see what happens as I proceed.
 
-class Aardvark(Cat):
+class Aardvark(Hlist):
 
     #Lbox technically required, but I don't even have access to anything besides 400. Ignore for now.
     def __init__(self, **kwargs):
@@ -320,8 +321,31 @@ class Aardvark(Cat):
 
         super(Aardvark, self).__init__(**kwargs)
 
+class Emu200(Hlist):
+    #TODO redesign the heiharchy here so this will be within Emu
 
-class Chinchilla(Cat):
+    def __init__(self, **kwargs):
+
+        defaults = {'simname':'emu200', 'loc':DEFAULT_LOCS['emu200'],
+                    'cosmo':cosmology.core.wCDM(H0 =  100*0.6616172, Om0 = 0.309483642394, Ode0 = 0.690516357606, w0 = -0.8588491),
+                    'pmass': 6.3994e8 , 'Lbox':200.0}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        from glob import glob
+        tmp_fnames = glob(kwargs['loc'] + 'hlist_*.list')  # snag all the hlists
+        tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames]  # just want the names in the dir
+        tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames]  # pull out scale factors
+
+        # Looked into a way to put this in the global init.
+        # However, the amount of copy-pasting that would save would be minimal, it turns out.
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        super(Emu200, self).__init__(**kwargs)
+
+class Chinchilla(Hlist):
 
     #Lbox and npart are required!
     def __init__(self, **kwargs):
