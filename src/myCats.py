@@ -7,7 +7,7 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050','Emu200','cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
@@ -399,4 +399,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
-        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050}
+        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050, 'emu200': Emu200}
