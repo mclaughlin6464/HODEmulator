@@ -66,7 +66,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     print model.param_dict
 
     #Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) 
+    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL)
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
