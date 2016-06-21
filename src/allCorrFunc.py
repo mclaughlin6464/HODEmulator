@@ -13,7 +13,9 @@ from halotools.mock_observables import return_xyz_formatted_array,tpcf, tpcf_jac
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-N_PTCL = 200#0 
+from memory_profiler import profile
+
+N_PTCL = 0 
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
@@ -32,6 +34,7 @@ def allCorrFunc(simname, outputdir, plot = False, **kwargs):
     for a in cat.scale_factors:
         _corrFunc(cat, a, outputdir, plot)
 
+@profile
 def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     'Helper function that uses the built in cat object'
 
@@ -67,27 +70,32 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
+    print 1
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
     #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
-
+    print 2
     #TODO N procs
+    print cpu_count()
     xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     #TODO ways to decide which of these to call
     #randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
     #xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
-
+    print 3
     halo_hostid = model.mock.galaxy_table['halo_id']
+    print 4
 
     xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
                     halo_hostid, RBINS,
                     period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
                     max_sample_size = 1e7)
+    print 5
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     output = np.stack([RBIN_CENTERS, xi_all, xi_1h, xi_2h])
+    print 6
 
     np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
