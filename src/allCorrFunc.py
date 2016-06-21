@@ -17,7 +17,7 @@ N_PTCL = 0
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
-RBIN_CENTERS = rbin_centers = (RBINS[1:]+RBINS[:-1])
+RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
 #See other branch
@@ -51,17 +51,19 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx]),
-        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True),#TODO consider putting this in redMagicSats intself
+        #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    #model.param_dict['logMmin'] = 13.1/cat.h
+    model.param_dict['logMmin'] = logMmin# - np.log10(cat.h) #this is gonna have to obviously be changed when merged with the other branch.
+
+    print model.param_dict
 
     #Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) #TODO try again with 300 or a larger number for more robustness
+    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL)
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
@@ -87,12 +89,9 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     output = np.stack([RBIN_CENTERS, xi_all, xi_1h, xi_2h])
 
-    #TODO save them as pairs with r_bin_centers so I don't have to know what the bins were!
-    np.savetxt(outputdir + 'corr_%.3f_stepFunc_mm_%.2f.npy' %(scale_factor, logMmin), output)
+    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
-    #np.savetxt(outputdir + 'xi_1h_%.3f_stepFunc.npy' %(scale_factor), xi_1h)
-    #np.savetxt(outputdir + 'xi_2h_%.3f_stepFunc.npy' %(scale_factor), xi_2h)
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':

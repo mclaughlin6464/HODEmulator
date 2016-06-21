@@ -7,11 +7,13 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy', 'cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
 KILS = True #TODO fixme
+
+#TODO each cat should carry a default output script, to which specific information is added. 
 
 #set filepaths depending on which cluster we're on.
 if KILS:
@@ -20,7 +22,8 @@ if KILS:
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
                     'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
-                    'guppy': '/u/ki/swmclau2/des/guppy/'}
+                    'guppy': '/u/ki/swmclau2/des/guppy/',
+                    'chinchilla1050':'/u/ki/swmclau2/des/rockstar_outputs/'}
 
     cache_locs = {'cat':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla':'/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -192,6 +195,29 @@ class Emu(OutList):
 
         super(Emu,self).__init__(**kwargs)
 
+class Chinchilla1050(OutList):
+
+    #pretty different from chinchilla, so for the time being writing as a separate object. 
+    def __init__(self, **kwargs):
+
+        defaults = {'simname': 'chinchilla1050', 'loc':default_locs['chinchilla1050'],
+                    'Lbox':1050.0, 'pmass':3.34881e+10,
+                    'filenames':['out_%d.list'% i for i in xrange(10)],
+                    'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
+                    'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        super(Chinchilla1050, self).__init__(**kwargs)
+
+
 class Guppy(OutList):
 
     def __init__(self, **kwargs):
@@ -333,4 +359,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
-            'aardvark':Aardvark,'guppy':Guppy}
+        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050}
