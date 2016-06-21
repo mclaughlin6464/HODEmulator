@@ -11,7 +11,7 @@ __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','G
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-KILS = True #TODO fixme
+KILS = False #TODO fixme
 
 #TODO each cat should carry a default output script, to which specific information is added. 
 
@@ -31,9 +31,9 @@ if KILS:
 else:
 
     default_locs = {'emu': '/scratch/users/swmclau2/hlists/emu/Box000/',
-                    'fox': '/scratch/users/swmclau2/hlists/Fox',
-                    'multidark_highres': '/scratch/users/swmclau2/hlists/MDHR',
-                    'chinchilla': '/scratch/users/swmclau2/hlists/Chinchilla'}
+                    'fox': '/scratch/users/swmclau2/hlists/Fox/',
+                    'multidark_highres': '/scratch/users/swmclau2/hlists/MDHR/',
+                    'chinchilla': '/scratch/users/swmclau2/hlists/Chinchilla/'}
 
     cache_locs = {'cat': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla': '/scratch/users/swmclau2/halocats/hlist_%.2f.list.%s_%s.hdf5'}
@@ -93,6 +93,7 @@ class Cat(object):
 
     def update_lists(self, user_kwargs, tmp_fnames, tmp_scale_factors ):
         '''If the user passes in a scale factor or filename, we have to do some cropping'''
+
         if 'filenames' not in user_kwargs:
             user_kwargs['filenames'] = tmp_fnames
         elif 'scale_factors' in user_kwargs:  # don't know why this case would ever be true
@@ -343,7 +344,11 @@ class Chinchilla(Hlist):
         assert kwargs['version_name'] in valid_version_names
             #raise ValueError('%s is not a valid version of %s'%(kwargs['version_name'], kwargs['simname']))
 
-        kwargs['loc'] += 'c%d-%d/rockstar/hlists/'%(int(kwargs['Lbox']), kwargs['npart'] )
+        kwargs['loc'] += 'c%d-%d/'%(int(kwargs['Lbox']), kwargs['npart'] )
+
+        if KILS:#differences in how the files are stored.
+            kwargs['loc'] += '/rockstar/hlists/'
+
         tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
         tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames] #just want the names in the dir
         tmp_scale_factors = [float(fname[6:-5]) for fname in tmp_fnames] #pull out scale factors
