@@ -81,7 +81,7 @@ class Cat(object):
         assert (len(self.filenames) == len(self.redshifts) ) or len(self.filenames) == 0 #built ins have no filenames
         assert len(self.scale_factors) == len(self.redshifts)
 
-        self.CACHE_LOCS =[CACHE_LOCS['cat']%(a, self.simname)
+        self.cache_locs =[CACHE_LOCS['cat']%(a, self.simname)
                                     for a in self.scale_factors]
 
     def __len__(self):
@@ -395,7 +395,7 @@ class Chinchilla(Hlist):
 
         super(Chinchilla, self).__init__(**kwargs)
 
-        self.CACHE_LOCS = [CACHE_LOCS['chinchilla']% (a, self.simname, self.version_name)
+        self.cache_locs = [CACHE_LOCS['chinchilla']% (a, self.simname, self.version_name)
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
