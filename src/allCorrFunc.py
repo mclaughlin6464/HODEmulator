@@ -21,14 +21,14 @@ RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2
 
 #TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
 #See other branch
-def corrFunc(simname, scale_factor, outputdir, plot = False,logMmin = 12.1,  **kwargs):
+def corrFunc(simname,Lbox, scale_factor, outputdir, plot = False,logMmin = 12.1,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
-    cat = cat_dict[simname](**kwargs)
+    cat = cat_dict[simname](Lbox,**kwargs)
     _corrFunc(cat, scale_factor, outputdir, plot, logMmin = logMmin)
 
-def allCorrFunc(simname, outputdir, plot = False, **kwargs):
+def allCorrFunc(simname, Lbox, outputdir, plot = False, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
-    cat = cat_dict[simname](**kwargs)
+    cat = cat_dict[simname](Lbox,**kwargs)
     for a in cat.scale_factors:
         _corrFunc(cat, a, outputdir, plot)
 
@@ -99,6 +99,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('simname', type=str,
                         help='The name of the simulation to populate. Defaults are stored in the myCats module.')
+    parser.add_argument('Lbox', type=float,
+                        help='Size of the box in Mpc. Necessaryto identify a unique box.')
     parser.add_argument('outputdir', type = str,
                         help='The directory to store the outputs of the calculations. ')
     parser.add_argument('--plot', action = 'store_true',
@@ -106,4 +108,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    allCorrFunc(args.simname, args.outputdir, args.plot)
+    allCorrFunc(args.simname, args.Lbox,args.outputdir, args.plot)

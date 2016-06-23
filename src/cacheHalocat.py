@@ -7,9 +7,9 @@ import argparse
 from halotools.sim_manager import RockstarHlistReader
 from myCats import *
 
-def cacheHalocat(simname,  **kwargs):
+def cacheHalocat(simname,Lbox,  **kwargs):
 
-    cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
+    cat = cat_dict[simname](Lbox,**kwargs) #TODO better handling of arguements
 
     for i in xrange(len(cat)): #Pythonic iteration?
         reader = RockstarHlistReader(cat.filenames[i], cat.columns_to_keep, cat.cache_locs[i], cat.simname,
@@ -23,10 +23,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = desc)
     parser.add_argument('simname', metavar='simname', type=str,
                         help='The name of the simulation to cache. Defaults are stored in the myCats module.')
+    parser.add_argument('Lbox', type=float,
+                        help='Size of the box in Mpc. Necessaryto identify a unique box.')
     #TODO do I want to have an advanced CLI? Connect to kwargs at all?
     parser.add_argument('--scale_factor', type = float, help = 'Scale factor to cache. Default is all. ')
     args = parser.parse_args()
     if args.scale_factor is None:
-        cacheHalocat(args.simname)
+        cacheHalocat(args.simname, args.Lbox)
     else:
-        cacheHalocat(args.simname, scale_factors = [args.scale_factor])
+        cacheHalocat(args.simname, args.Lbox, scale_factors = [args.scale_factor])
