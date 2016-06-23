@@ -13,7 +13,7 @@ from halotools.mock_observables import return_xyz_formatted_array,tpcf, tpcf_jac
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-N_PTCL = 200#0 
+N_PTCL =20 
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
@@ -89,7 +89,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     output = np.stack([RBIN_CENTERS, xi_all, xi_1h, xi_2h])
 
-    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
+    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f_np_%d.npy' %(scale_factor, logMmin, N_PTCL), output)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
