@@ -13,7 +13,7 @@ from halotools.mock_observables import return_xyz_formatted_array,tpcf, tpcf_jac
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-N_PTCL =20 
+N_PTCL = 0 
 PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
@@ -63,7 +63,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     print model.param_dict
 
     #Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL) 
+    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL)
 
     #Now, calculate with Halotools builtin
     #TODO include the fast version
