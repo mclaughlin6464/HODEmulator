@@ -13,8 +13,13 @@ class RedMagicCens(Zheng07Cens):
 
         super(RedMagicCens,self).__init__(**kwargs)
 
-        if 'f_c' not in self.param_dict:
-            self.param_dict['f_c'] = 0.19 #add in best fit of new param.
+        defaults = {'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
+
+        #load defaults  
+        #if 'f_c' not in self.param_dict:
+        #    self.param_dict['f_c'] = 0.19 #add in best fit of new param.
+
+        self.param_dict.update(defaults)
 
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
@@ -23,11 +28,19 @@ class RedMagicCens(Zheng07Cens):
 class RedMagicSats(Zheng07Sats):
     "Slight tweak of Zheng model to add new parameter, f_c"
 
+    def __init__(self, **kwargs):
+
+        super(RedMagicSats,self).__init__(**kwargs)
+        #load defaults
+        defaults = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02}
+        self.param_dict.update(defaults)
+
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
         f_c = 1
         if 'f_c' in self.param_dict:
             f_c = self.param_dict['f_c']
+
 
         return super(RedMagicSats,self).mean_occupation(**kwargs)/f_c
 
@@ -36,7 +49,7 @@ class StepFuncCens(Zheng07Cens):
     def __init__(self, **kwargs):
         upper_occupation_bound = 1.0
         super(StepFuncCens, self).__init__(**kwargs)
-        self.param_dict['logMmin'] = np.log10(7e12/(0.7))#200 Chinchilla particles
+        self.param_dict['logMmin'] = 12.1-np.log10(0.7)#200 Chinchilla particles
 
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
@@ -53,6 +66,7 @@ class StepFuncCens(Zheng07Cens):
             mass = np.array([mass])
 
         Mmin = 10**self.param_dict['logMmin']
+        x = np.array(mass > Mmin, dtype = int)
 
         return np.array(mass > Mmin, dtype = int)
 

@@ -24,6 +24,9 @@ if __name__ == '__main__':
     parser.add_argument('simname', metavar='simname', type=str,
                         help='The name of the simulation to cache. Defaults are stored in the myCats module.')
     #TODO do I want to have an advanced CLI? Connect to kwargs at all?
+    parser.add_argument('--scale_factor', type = float, help = 'Scale factor to cache. Default is all. ')
     args = parser.parse_args()
-
-    cacheHalocat(args.simname)
+    if args.scale_factor is None:
+        cacheHalocat(args.simname)
+    else:
+        cacheHalocat(args.simname, scale_factors = [args.scale_factor])

@@ -1,7 +1,8 @@
 #!/bin/bash/
 #@Author Sean McLaughlin
 #This script will cache the hlists I've moved to Sherlock.
-from ..src.cacheHalocat import cacheHalocat
+from cacheHalocat import cacheHalocat
+from time import time
 
 sims = {}
 sims['emu'] = []#kwargs for each sim
@@ -15,9 +16,10 @@ boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 2048),
 sims['chinchilla'] = [{'Lbox':lb, 'npart':np} for lb,np in boxsize_npart ]
 
 scale_factor = 1.0
-
+t0 = time()
 for simname, kwargs in sims.iteritems():
     print simname
+    print 'Time: %.3f'%(time()-t0)
     try:
         if len(kwargs) == 0:
             cacheHalocat(simname)
@@ -30,5 +32,6 @@ for simname, kwargs in sims.iteritems():
 
     except:
         print 'An error occured for %s'%simname
+        print 'Time: %.3f'%(time()-t0)
         #continue
         raise
