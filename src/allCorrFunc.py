@@ -100,6 +100,7 @@ def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
         xi_all = np.array(xi_all)
 
     else:
+
         xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     #TODO ways to decide which of these to call
