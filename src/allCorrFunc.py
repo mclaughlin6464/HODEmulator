@@ -27,7 +27,7 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
-def corrFunc(simname, scale_factor, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
+def corrFunc(simname, scale_factor, outputdir, HOD = 'redMagic', params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 
     if not isdir(outputdir):
@@ -35,13 +35,13 @@ def corrFunc(simname, scale_factor, outputdir,params = {}, n_ptcl = N_PTCL, rbin
 
     cat = cat_dict[simname](**kwargs)
     print str(cat)
-    halocat, model = loadHaloAndModel(cat, scale_factor)
+    halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
     data = popAndCorr(halocat,model, cat, params, n_ptcl, rbins)
 
-    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' % (scale_factor, params['logMmin']), data)
+    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (HOD, scale_factor, params['logMmin']), data)
 
 
-def allCorrFunc(simname, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
+def allCorrFunc(simname, outputdir,HOD = 'redmagic', params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
     if not isdir(outputdir):
         raise IOError("%s is not a directory."%outputdir)
@@ -49,13 +49,13 @@ def allCorrFunc(simname, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, 
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     for a in cat.scale_factors:
-        halocat, model = loadHaloAndModel(cat, a)
+        halocat, model = loadHaloAndModel(cat,HOD, a)
         data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
 
-        np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(a, params['logMmin']), data)
+        np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' %(HOD, a, params['logMmin']), data)
 
 
-def loadHaloAndModel(cat, scale_factor):
+def loadHaloAndModel(cat, HOD, scale_factor):
     '''Return the cached halo catalog and the appropriate HOD model'''
     try:
         idx = cat.scale_factors.index(scale_factor)
@@ -63,15 +63,22 @@ def loadHaloAndModel(cat, scale_factor):
         print 'Provided scale_factor %.3f not cached for %s.'%(scale_factor, cat.simname)
         raise
 
+    if HOD == 'redMagic':
+        cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
+        sats_occ = RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True)
+    elif HOD == 'stepFunc':
+        cens_occ = StepFuncCens(redshift=cat.redshifts[idx])
+        sats_occ = StepFuncSats(redshift=cat.redshifts[idx])
+    else:
+        raise ValueError('%s invalid input for HOD'%HOD)
+
     #Note: Confusing name between cat and halocat. Consider changing.
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=cens_occ,
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True),#TODO consider putting this in redMagicSats intself
-        #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=sats_occ,
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
     return halocat, model
