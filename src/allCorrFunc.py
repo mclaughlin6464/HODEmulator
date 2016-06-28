@@ -27,6 +27,7 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.25, 15)
 RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2 #just for plotting
 
+#TODO change name so as to not overlap with CorrFunc
 def corrFunc(simname, scale_factor, outputdir, HOD = 'redMagic', params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 
