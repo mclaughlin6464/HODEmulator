@@ -11,13 +11,14 @@ __all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','G
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-KILS = False #TODO fixme
+KILS = True#TODO fixme
 
 #TODO each cat should carry a default output script, to which specific information is added. 
 
 #set filepaths depending on which cluster we're on.
 if KILS:
     DEFAULT_LOCS = {'emu':'/u/ki/swmclau2/des/emu/Box000/',
+                    'emu200':'/u/ki/swmclau2/des/emu200/',
                     'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
