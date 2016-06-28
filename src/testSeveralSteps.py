@@ -25,9 +25,4 @@ if __name__ == '__main__':
 
     main(args.simname, args.outputdir, HOD = HOD, n_ptcl = args.n_ptcl)
 
-<<<<<<< HEAD
-for m in [12.0 + i*0.25 for i in xrange(8)]:
-    print 'Log Min Mass: %e'%m
-    corrFunc(simname, 1.0, '/u/ki/swmclau2/des/HODOutput/%s_step_tests/'%simname,logMmin = m, Lbox = 250, npart = 2048)
-=======
->>>>>>> e1b563525ce901ea502ca148f7a51f34c2f9159c
+
