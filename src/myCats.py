@@ -200,14 +200,14 @@ class Emu(OutList):
                     'cosmo': cosmology.core.wCDM(H0 =  63.36569, Om0 = 0.340573, Ode0 = 0.659427, w0 = -0.816597), 
                     'scale_factors':[0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         tmp_scale_factors = defaults['scale_factors']
         tmp_fnames = defaults['filenames']
 
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Emu,self).__init__(**kwargs)
 
@@ -222,14 +222,14 @@ class Chinchilla1050(OutList):
                     'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.7, Om0=0.286, Ode0=0.714),
                     'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         tmp_scale_factors = defaults['scale_factors']
         tmp_fnames = defaults['filenames']
 
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Chinchilla1050, self).__init__(**kwargs)
 
@@ -244,14 +244,14 @@ class Guppy(OutList):
                     'cosmo':cosmology.core.LambdaCDM(H0 = 100*0.6881, Om0=0.295, Ode0=0.705),
                     'scale_factors':[0.1429,0.1667,0.2,0.25,0.3333,0.4,0.5,0.6667,0.8,1.0]}
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         tmp_scale_factors = defaults['scale_factors']
         tmp_fnames = defaults['filenames']
 
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Guppy, self).__init__(**kwargs)
 
@@ -264,14 +264,14 @@ class Fox(Hlist):
                     'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
                     'scale_factors': [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0] }
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         tmp_scale_factors = defaults['scale_factors']
         tmp_fnames = defaults['filenames']
 
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Fox, self).__init__(**kwargs)
 
@@ -282,16 +282,16 @@ class MDHR(Hlist):
                     'Lbox': 1e3, 'pmass': 8.721e9,
                     'scale_factors': [0.25690, 0.34800, 0.49990, 0.53030, 0.65180, 0.71250, 0.80370, 0.91000, 1.00110]}
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         #if 'filenames' not in kwargs or kwargs['filenames'] is None:
         #    kwargs['filenames'] = ['hlist_%.5f.list' % a for a in kwargs['scale_factors']]
         tmp_scale_factors = defaults['scale_factors']
         tmp_fnames = ['hlist_%.5f.list' % a for a in tmp_scale_factors]
 
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(MDHR,self).__init__(**kwargs)
 
@@ -308,10 +308,6 @@ class Aardvark(Hlist):
                     'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.73, Om0=0.23, Ode0=0.77, Ob0=0.047),
                     'pmass':4.75619e+08, 'Lbox':400.0}
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         from glob import glob
 
         tmp_fnames =  glob(kwargs['loc']+ 'hlist_*.list') #snag all the hlists
@@ -321,6 +317,10 @@ class Aardvark(Hlist):
         #Looked into a way to put this in the global init.
         #However, the amount of copy-pasting that would save would be minimal, it turns out.
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Aardvark, self).__init__(**kwargs)
 
@@ -333,10 +333,6 @@ class Emu200(Hlist):
                     'cosmo':cosmology.core.wCDM(H0 =  100*0.6616172, Om0 = 0.309483642394, Ode0 = 0.690516357606, w0 = -0.8588491),
                     'pmass': 6.3994e8 , 'Lbox':200.0}
 
-        for key, value in defaults.iteritems():
-            if key not in kwargs or kwargs[key] is None:
-                kwargs[key] = value
-
         from glob import glob
         tmp_fnames = glob(kwargs['loc'] + 'hlist_*.list')  # snag all the hlists
         tmp_fnames = [fname[len(kwargs['loc']):] for fname in tmp_fnames]  # just want the names in the dir
@@ -345,6 +341,10 @@ class Emu200(Hlist):
         # Looked into a way to put this in the global init.
         # However, the amount of copy-pasting that would save would be minimal, it turns out.
         self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
 
         super(Emu200, self).__init__(**kwargs)
 
