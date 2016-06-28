@@ -87,7 +87,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
 def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
     '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
     print 'Min Num Particles: %d\t%d bins'%(n_ptcl, len(rbins))
-    model.update(params)#insert new params into model
+    model.param_dict.update(params)#insert new params into model
     # Note: slow
     model.populate_mock(halocat,Num_ptcl_requirement=n_ptcl)
 
