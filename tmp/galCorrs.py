@@ -12,9 +12,9 @@ from halotools.mock_observables import return_xyz_formatted_array, tpcf
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 
-from redMagicHOD import *
+from src.redMagicHOD import *
 
-from myCats import *
+from src.myCats import *
 
 def galCorr(simname, scale_factor, outputdir,  **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'

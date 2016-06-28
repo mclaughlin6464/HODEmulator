@@ -30,7 +30,7 @@ class RedMagicSats(Zheng07Sats):
 
     def __init__(self, **kwargs):
 
-        super(RedMagicSats,self).__init__(**kwargs)
+        super(RedMagicSats,self).__init__(modulate_with_cenocc = True, **kwargs)
         #load defaults
         defaults = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02}
         self.param_dict.update(defaults)

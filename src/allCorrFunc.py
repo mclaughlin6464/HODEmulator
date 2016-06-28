@@ -5,11 +5,19 @@
 import numpy as np
 import argparse
 from multiprocessing import cpu_count
-from os.path import isdir
+from os.path import isdir, dirname, abspath, join
 from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPhaseSpace
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array,tpcf, tpcf_jackknife, tpcf_one_two_halo_decomp, wp
+try:
+    CORRFUNC = True
+    from Corrfunc._countpairs import coutpairs_xi
+
+
+except ImportError:
+    CORRFUNC = False
+
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
@@ -19,28 +27,36 @@ PI_MAX = 40
 RBINS = np.logspace(-1, 1.5, 20)
 RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2
 
-#TODO will need ways to pass params into the model when populating. Could just use kwargs, but how to separate cat kwargs?
-#See other branch
-def corrFunc(simname, scale_factor, outputdir, plot = False,logMmin = 12.1,  **kwargs):
+def corrFunc(simname, scale_factor, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
-    cat = cat_dict[simname](**kwargs)
-    _corrFunc(cat, scale_factor, outputdir, plot, logMmin = logMmin)
-
-def allCorrFunc(simname, outputdir, plot = False, **kwargs):
-    'Calculates cross correlations for all scale factors cached for one halocatalog'
-    cat = cat_dict[simname](**kwargs)
-    for a in cat.scale_factors:
-        _corrFunc(cat, a, outputdir, plot)
-
-def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
-    'Helper function that uses the built in cat object'
-
-    print str(cat)
-    print 'Min Num Particles: %d'%N_PTCL
 
     if not isdir(outputdir):
-        raise IOError("%s is not a directory"%outputdir)
+        raise IOError("%s is not a directory."%outputdir)
 
+    cat = cat_dict[simname](**kwargs)
+    print str(cat)
+    halocat, model = loadHaloAndModel(cat, scale_factor)
+    data = popAndCorr(halocat,model, cat, params, n_ptcl, rbins)
+
+    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' % (scale_factor, params['logMmin']), data)
+
+
+def allCorrFunc(simname, outputdir,params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
+    'Calculates cross correlations for all scale factors cached for one halocatalog'
+    if not isdir(outputdir):
+        raise IOError("%s is not a directory."%outputdir)
+
+    cat = cat_dict[simname](**kwargs)
+    print str(cat)
+    for a in cat.scale_factors:
+        halocat, model = loadHaloAndModel(cat, a)
+        data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+
+        np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(a, params['logMmin']), data)
+
+
+def loadHaloAndModel(cat, scale_factor):
+    '''Return the cached halo catalog and the appropriate HOD model'''
     try:
         idx = cat.scale_factors.index(scale_factor)
     except:
@@ -58,21 +74,34 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
         satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
-    model.param_dict['logMmin'] = logMmin# - np.log10(cat.h) #this is gonna have to obviously be changed when merged with the other branch.
+    return halocat, model
 
-    print model.param_dict
-
-    #Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement = N_PTCL)
+def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
+    '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
+    print 'Min Num Particles: %d\t%d bins'%(n_ptcl, len(rbins))
+    model.update(params)#insert new params into model
+    # Note: slow
+    model.populate_mock(halocat,Num_ptcl_requirement=n_ptcl)
 
     #Now, calculate with Halotools builtin
-    #TODO include the fast version
     x, y, z = [model.mock.galaxy_table[c] for c in ['x','y','z'] ]
     #mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x,y,z)#, mask = mask)
 
     #TODO N procs
-    xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count(), max_sample_size = int(1e4))
+    if CORRFUNC:
+        #write bins to file
+        BINDIR = dirname(abspath(__file__))  # location of files with bin edges
+        with open(join(BINDIR , '/binfile'), 'w') as f:
+            for low, high in zip(RBINS[:-1], RBINS[1:]):
+                f.write('\t%f\t%f\n' % (low, high))
+
+        xi_all = coutpairs_xi(model.mock.Lbox*cat.h, cpu_count(), join(BINDIR,'/binfile'), x*cat.h, y*cat.h, z*cat.h )
+        xi_all = np.array(xi_all)
+
+    else:
+
+        xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     #TODO ways to decide which of these to call
     #randoms = np.random.random(pos.shape)*model.mock.Lbox*cat.h
@@ -81,17 +110,19 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     halo_hostid = model.mock.galaxy_table['halo_id']
 
     xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,
-                    halo_hostid, RBINS,
-                    period = cat.h*model.mock.Lbox, num_threads =  cpu_count(),
-                    max_sample_size = 1e7)
+                                            halo_hostid, rbins,
+                                            period=model.mock.Lbox*cat.h, num_threads=cpu_count(),
+                                            max_sample_size=1e7)
 
     #wp_all = wp(pos*cat.h, RBINS, PI_MAX, period=model.mock.Lbox*cat.h, num_threads = cpu_count())
 
     output = np.stack([RBIN_CENTERS, xi_all, xi_1h, xi_2h])
 
-    np.savetxt(outputdir + 'corr_%.3f_stepFunc_mm_%.2f_np_%d.npy' %(scale_factor, logMmin, N_PTCL), output)
-    #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
+    return output
 
+
+    #np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
+    #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 if __name__ == '__main__':
