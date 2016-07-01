@@ -39,7 +39,7 @@ def corrFunc(simname, scale_factor, outputdir, HOD = 'redMagic', params = {}, n_
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
     data = popAndCorr(halocat,model, cat, params, n_ptcl, rbins)
 
-    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (HOD, scale_factor, params['logMmin']), data)
+    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
 
 
 def allCorrFunc(simname, outputdir,HOD = 'redmagic', params = {}, n_ptcl = N_PTCL, rbins = RBINS, **kwargs):
@@ -53,7 +53,7 @@ def allCorrFunc(simname, outputdir,HOD = 'redmagic', params = {}, n_ptcl = N_PTC
         halocat, model = loadHaloAndModel(cat,HOD, a)
         data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
 
-        np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' %(HOD, a, params['logMmin']), data)
+        np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' %(a,HOD, params['logMmin']), data)
 
 
 def loadHaloAndModel(cat, HOD, scale_factor):
@@ -66,7 +66,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
 
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
-        sats_occ = RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True)
+        sats_occ = RedMagicSats(redshift=cat.redshifts[idx])#,modulate_with_cenocc = True)
     elif HOD == 'stepFunc':
         cens_occ = StepFuncCens(redshift=cat.redshifts[idx])
         sats_occ = StepFuncSats(redshift=cat.redshifts[idx])

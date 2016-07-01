@@ -6,7 +6,8 @@ def main(simname,outputdir, **kwargs):
 
     for m in [12.0 + i*0.25 for i in xrange(8)]:
         print 'Log Min Mass: %e'%m
-        corrFunc(simname, 1.0, outputdir+'/%s_step_tests/'%simname,logMmin = m, **kwargs)
+        params = {'logMmin':m}
+        corrFunc(simname, 1.0, outputdir+'/%s_step_tests/'%simname,params = params, **kwargs)
 
 if __name__ == '__main__':
     desc = 'Run corrFunc on several mass steps.'

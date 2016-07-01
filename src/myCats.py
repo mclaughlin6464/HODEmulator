@@ -106,9 +106,6 @@ class Cat(object):
 
     def update_lists(self, user_kwargs, tmp_fnames, tmp_scale_factors ):
         '''If the user passes in a scale factor or filename, we have to do some cropping'''
-        print user_kwargs['filenames']
-        print user_kwargs['scale_factors'] 
-
         if 'filenames' not in user_kwargs:
             user_kwargs['filenames'] = tmp_fnames
         elif 'scale_factors' in user_kwargs:  # don't know why this case would ever be true

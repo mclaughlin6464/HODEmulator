@@ -18,8 +18,10 @@ class RedMagicCens(Zheng07Cens):
         #load defaults  
         #if 'f_c' not in self.param_dict:
         #    self.param_dict['f_c'] = 0.19 #add in best fit of new param.
+        print self.param_dict
 
         self.param_dict.update(defaults)
+        print self.param_dict
 
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
@@ -32,7 +34,7 @@ class RedMagicSats(Zheng07Sats):
 
         super(RedMagicSats,self).__init__(modulate_with_cenocc = True, **kwargs)
         #load defaults
-        defaults = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02}
+        defaults = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02, 'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
         self.param_dict.update(defaults)
 
     def mean_occupation(self, **kwargs):
