@@ -366,6 +366,7 @@ class Fox1050(OutList):
                 kwargs[key] = value
 
 
+
 class Chinchilla(Hlist):
 
     #Lbox and npart are required!
