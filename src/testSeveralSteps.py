@@ -4,10 +4,10 @@ import argparse
 
 def main(simname,outputdir, **kwargs):
 
-    for m in [12.0 + i*0.25 for i in xrange(8)]:
+    for m in [11.5 + i*0.1 for i in xrange(25)]:
         print 'Log Min Mass: %e'%m
         params = {'logMmin':m}
-        corrFunc(simname, 1.0, outputdir+'/%s_step_tests/'%simname,params = params, **kwargs)
+        corrFunc(simname, 1.0, outputdir+'/%s_step_tests/'%simname,params = params, Lbox=400, npart=2048,**kwargs)
 
 if __name__ == '__main__':
     desc = 'Run corrFunc on several mass steps.'
