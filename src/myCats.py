@@ -7,7 +7,8 @@
 from astropy import cosmology
 from socket import gethostname
 
-__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050','Emu200','cat_dict']
+__all__ = ['Bolshoi','Multidark','Emu', 'Fox', 'MDHR','Chinchilla','Aardvark','Guppy','Chinchilla1050','Emu200',
+           'Fox1050', 'cat_dict']
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
@@ -20,6 +21,7 @@ if KILS:
     DEFAULT_LOCS = {'emu':'/u/ki/swmclau2/des/emu/Box000/',
                     'emu200':'/u/ki/swmclau2/des/emu200/',
                     'fox':'/nfs/slac/g/ki/ki23/des/BCCSims/Fox/Lb400/halos/rockstar/output/hlists/',
+                    'fox1050':'/u/ki/swmclau2/des/fox/',
                     'multidark_highres':'/nfs/slac/g/ki/ki20/cosmo/behroozi/MultiDark/hlists/',
                     'chinchilla':'/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
                     'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
@@ -345,6 +347,25 @@ class Emu200(Hlist):
 
         super(Emu200, self).__init__(**kwargs)
 
+class Fox1050(OutList):
+
+    def __init__(self, **kwargs):
+        defaults = {'simname':'fox1050', 'loc': DEFAULT_LOCS['fox1050'],
+                    'Lbox': 1050.0, 'pmass': 3.72749e+10,
+                    'filenames':['out_%d.list'% i for i in xrange(10)],
+                    'cosmo': cosmology.core.LambdaCDM(H0 = 100*0.6704346, Om0=0.318340, Ode0=0.681660),
+                    'scale_factors': [0.2, 0.222222, 0.25, 0.287514, 0.333333, 0.4, 0.5, 0.666667, 0.8, 1.0] }
+
+        tmp_scale_factors = defaults['scale_factors']
+        tmp_fnames = defaults['filenames']
+
+        self.update_lists(kwargs, tmp_fnames, tmp_scale_factors)
+
+        for key, value in defaults.iteritems():
+            if key not in kwargs or kwargs[key] is None:
+                kwargs[key] = value
+
+
 class Chinchilla(Hlist):
 
     #Lbox and npart are required!
@@ -363,11 +384,11 @@ class Chinchilla(Hlist):
             if key not in kwargs or kwargs[key] is None:
                 kwargs[key] = value
 
-        valid_version_names = set(['Lb125-1024','Lb125-2048','Lb250-1024','Lb250-128',
+        valid_version_names = {'Lb125-1024','Lb125-2048','Lb250-1024','Lb250-128',
                                    'Lb250-196','Lb250-2048', 'Lb250-2560', 'Lb250-320',
                                    'Lb250-512', 'Lb250-768', 'Lb250-85', 'Lb400-1024',
                                    'Lb400-136', 'Lb400-2048', 'Lb400-210', 'Lb400-315',
-                                   'Lb400-512', 'Lb400-768'])
+                                   'Lb400-512', 'Lb400-768'}
 
         if 'version_name' not in kwargs:
             kwargs['version_name'] = 'Lb%d-%d'%(int(kwargs['Lbox']), kwargs['npart'] )
@@ -399,4 +420,4 @@ class Chinchilla(Hlist):
                            for a in self.scale_factors] #make sure we don't have redunancies.
 
 cat_dict = {'bolshoi':Bolshoi, 'multidark':Multidark,'emu': Emu, 'fox': Fox, 'multidark_highres': MDHR, 'chinchilla': Chinchilla,
-        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050, 'emu200': Emu200}
+        'aardvark':Aardvark,'guppy':Guppy, 'chinchilla1050':Chinchilla1050, 'emu200': Emu200, 'fox1050':Fox1050}

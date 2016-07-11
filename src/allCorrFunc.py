@@ -25,10 +25,10 @@ from myCats import *
 
 print 'CORRFUNC: %s'%CORRFUNC
 
-N_PTCL = 0 
+N_PTCL = 0
 PI_MAX = 40
 
-RBINS = np.logspace(-2, 1.7, 25)
+RBINS = np.logspace(-1, 1.7, 20)
 RBIN_CENTERS = (RBINS[1:]+RBINS[:-1])/2
 
 #TODO change name so as to not overlap with CorrFunc
@@ -121,8 +121,8 @@ def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
             for low, high in zip(RBINS[:-1], RBINS[1:]):
                 f.write('\t%f\t%f\n' % (low, high))
 
-        #countpairs requires casting in order to work right. 
-        xi_all = countpairs_xi(model.mock.Lbox*cat.h, cpu_count(), join(BINDIR,'./binfile'), 
+        #countpairs requires casting in order to work right.
+        xi_all = countpairs_xi(model.mock.Lbox*cat.h, cpu_count(), join(BINDIR,'./binfile'),
                 x.astype('float32')*cat.h, y.astype('float32')*cat.h, z.astype('float32')*cat.h )
         xi_all = np.array(xi_all, dtype = 'float64')[:,3]
 
@@ -130,8 +130,8 @@ def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
 
         xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
     '''
-    #TODO way to decide which of these to call. 
-    randoms = np.random.random((pos.shape[0]*20,3))*model.mock.Lbox*cat.h
+    #TODO way to decide which of these to call.
+    randoms = np.random.random((pos.shape[0]*50,3))*model.mock.Lbox*cat.h #Solution to NaNs: Just fuck me up
     xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     print 'Corr Calc Time: %.3f s'%(time()-t0)
