@@ -79,7 +79,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
         sats_occ = RedMagicSats(redshift=cat.redshifts[idx])#,modulate_with_cenocc = True)
-        sats_occ.central_occupation_model = cens_occ #Hack, remove if Halotools gets updated
+        #sats_occ.central_occupation_model = cens_occ #Hack, remove if Halotools gets updated
     elif HOD == 'stepFunc':
         cens_occ = StepFuncCens(redshift=cat.redshifts[idx])
         sats_occ = StepFuncSats(redshift=cat.redshifts[idx])
@@ -131,7 +131,7 @@ def popAndCorr(halocat,model, cat, params = {}, n_ptcl = N_PTCL, rbins = RBINS):
         xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
     '''
     #TODO way to decide which of these to call.
-    randoms = np.random.random((pos.shape[0]*50,3))*model.mock.Lbox*cat.h #Solution to NaNs: Just fuck me up
+    randoms = np.random.random((pos.shape[0]*50,3))*model.mock.Lbox*cat.h #Solution to NaNs: Just fuck me up with randoms
     xi_all, xi_cov = tpcf_jackknife(pos*cat.h,randoms, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
 
     print 'Corr Calc Time: %.3f s'%(time()-t0)
