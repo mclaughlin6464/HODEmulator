@@ -85,6 +85,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
             print 'No value found close enough.'
             raise
 
+
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
         sats_occ = RedMagicSats(redshift=cat.redshifts[idx], cenocc_model = cens_occ)  # ,modulate_with_cenocc = True)
