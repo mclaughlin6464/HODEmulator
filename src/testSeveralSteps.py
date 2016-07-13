@@ -1,13 +1,14 @@
 #I'm going to be testing the correlation functions of the step Function with several different thresholds.
 from allCorrFunc import corrFunc
+from os.path import join
 import argparse
 
 def main(simname,outputdir, **kwargs):
 
-    for m in [11.5 + i*0.1 for i in xrange(25)]:
+    for m in [12.0 + i*0.25 for i in xrange(8)]:
         print 'Log Min Mass: %e'%m
         params = {'logMmin':m}
-        corrFunc(simname, 1.0, outputdir+'/%s_step_tests/'%simname,params = params, Lbox=400, npart=2048,**kwargs)
+        corrFunc(simname, 1.0, join(outputdir,'%s_step_tests/'%simname),params = params, Lbox=400, npart=2048,**kwargs)
 
 if __name__ == '__main__':
     desc = 'Run corrFunc on several mass steps.'
