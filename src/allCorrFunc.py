@@ -76,7 +76,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
     '''Return the cached halo catalog and the appropriate HOD model'''
     try:
         idx = cat.scale_factors.index(scale_factor)
-    except:
+    except ValueError:
         print 'Provided scale_factor %.3f not cached for %s.' % (scale_factor, cat.simname)
         idx = np.argmin(np.abs(cat.scale_factors - scale_factor))
         if np.abs(cat.scale_factors[idx] - scale_factor) < SF_TOLERANCE:
@@ -84,7 +84,6 @@ def loadHaloAndModel(cat, HOD, scale_factor):
         else:
             print 'No value found close enough.'
             raise
-
 
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
