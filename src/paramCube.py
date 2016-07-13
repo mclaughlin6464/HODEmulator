@@ -31,6 +31,9 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
 
     #TODO if user passed in fixed_params and n_per_dim but they have different keys!
 
+    print fixed_params
+    return
+
     values = {}
     for param in BOUNDS.iterkeys():
         if param in fixed_params:
