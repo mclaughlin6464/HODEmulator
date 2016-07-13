@@ -17,11 +17,8 @@ outputdir = '/u/ki/swmclau2/des/HODOutput/chinchilla/'
 for boxsize, npart in boxsize_npart: #see what I did there?
     try:
         print boxsize, npart
-        #cacheHalocat(simname, Lbox = boxsize, npart = npart, scale_factors = [scale_factor])
-        new_output = outputdir+ 'Lb%d-%d/'%(int(boxsize), npart)
-        if not path.isdir(new_output):
-            mkdir(new_output)
-        corrFunc(simname, scale_factor, new_output, Lbox = boxsize, npart = npart)
+        cacheHalocat(simname, Lbox = boxsize, npart = npart, scale_factors = [scale_factor])
+
     except:
         print 'An error occured for %.2f, %d'%(boxsize, npart)
         #continue
