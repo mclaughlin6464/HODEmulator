@@ -11,7 +11,7 @@ boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 2048),
                 (400.0, 2048), (400.0, 512), (400.0, 768)]
 #boxsize_npart = [(250.0, 1024), (250.0, 2048),(250.0, 2560), (250.0, 512), (250.0, 768)]
 
-scale_factor = 1.0
+scale_factor = 0.658
 outputdir = '/u/ki/swmclau2/des/HODOutput/chinchilla/'
 
 for boxsize, npart in boxsize_npart: #see what I did there?
