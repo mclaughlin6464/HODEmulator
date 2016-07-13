@@ -8,10 +8,9 @@ import argparse
 
 from myCats import cat_dict
 from allCorrFunc import loadHaloAndModel, popAndCorr
-
+from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to ahve ti there.
 # Given by Elisabeth from on high
-BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
-          'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
+
 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.

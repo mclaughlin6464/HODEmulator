@@ -37,6 +37,8 @@ class RedMagicSats(Zheng07Sats):
         defaults = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02, 'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
         self.param_dict.update(defaults)
 
+        self._suppress_repeated_param_warning=True
+
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
         f_c = 1

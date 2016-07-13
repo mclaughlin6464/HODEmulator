@@ -12,6 +12,9 @@ outputdir='/u/ki/swmclau2/des/EmulatorData/'
 
 queue = 'bulletmpi'
 
+BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
+          'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
+
 for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num = 5):
     for alpha in np.linspace(BOUNDS['alpha'][0], BOUNDS['alpha'][1], num=5):
         for logM1 in np.linspace(BOUNDS['logM1'][0], BOUNDS['logM1'][1], num=5):
