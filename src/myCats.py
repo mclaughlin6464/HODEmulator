@@ -126,6 +126,8 @@ class Cat(object):
         else:  # both case covered above.
             user_kwargs['filenames'] = []
             for a in user_kwargs['scale_factors']:
+                print a
+                print sorted(tmp_scale_factors)
                 assert a in tmp_scale_factors
                 user_kwargs['filenames'].append(tmp_fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
 
