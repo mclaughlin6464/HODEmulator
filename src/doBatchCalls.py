@@ -6,8 +6,6 @@ from subprocess import call
 from os import path
 import numpy as np
 
-from paramCube import BOUNDS
-
 outputdir='/u/ki/swmclau2/des/EmulatorData/'
 
 queue = 'bulletmpi'
