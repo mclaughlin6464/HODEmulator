@@ -6,6 +6,7 @@
 
 from astropy import cosmology
 from socket import gethostname
+import numpy as np
 
 __all__ = ['Bolshoi', 'Multidark', 'Emu', 'Fox', 'MDHR', 'Chinchilla', 'Aardvark', 'Guppy', 'Chinchilla1050', 'Emu200',
            'Fox1050', 'cat_dict']
@@ -13,6 +14,7 @@ __all__ = ['Bolshoi', 'Multidark', 'Emu', 'Fox', 'MDHR', 'Chinchilla', 'Aardvark
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
 KILS = True  # TODO fixme
+SF_TOLERANCE = 0.05
 
 # TODO each cat should carry a default output script, to which specific information is added.
 
@@ -126,11 +128,13 @@ class Cat(object):
         else:  # both case covered above.
             user_kwargs['filenames'] = []
             for a in user_kwargs['scale_factors']:
-                print a
-                print sorted(tmp_scale_factors)
-                assert a in tmp_scale_factors
-                user_kwargs['filenames'].append(tmp_fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
-
+                try:
+                    assert a in tmp_scale_factors
+                    user_kwargs['filenames'].append(tmp_fnames[tmp_scale_factors.index(a)])  # get teh matching scale factor
+                except AssertionError:
+                    idx = np.argmin(np.abs(np.array(tmp_scale_factors) - a))
+                    assert np.abs(tmp_scale_factors[idx] - a) < SF_TOLERANCE
+                    user_kwargs['filenames'].append(tmp_fnames[idx])  # get teh matching scale factor
 
 class Hlist(Cat):
     def __init__(self, **kwargs):

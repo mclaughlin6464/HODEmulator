@@ -10,7 +10,7 @@ from paramCube import BOUNDS
 
 outputdir='/u/ki/swmclau2/des/EmulatorData/'
 
-queue = 'medium'
+queue = 'bulletmpi'
 
 for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num = 5):
     for alpha in np.linspace(BOUNDS['alpha'][0], BOUNDS['alpha'][1], num=5):
