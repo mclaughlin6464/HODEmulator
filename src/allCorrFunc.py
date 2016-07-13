@@ -80,11 +80,11 @@ def loadHaloAndModel(cat, HOD, scale_factor):
 
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
-        sats_occ = RedMagicSats(redshift=cat.redshifts[idx])  # ,modulate_with_cenocc = True)
+        sats_occ = RedMagicSats(redshift=cat.redshifts[idx], cenocc_model = cens_occ)  # ,modulate_with_cenocc = True)
         # sats_occ.central_occupation_model = cens_occ #Hack, remove if Halotools gets updated
     elif HOD == 'stepFunc':
         cens_occ = StepFuncCens(redshift=cat.redshifts[idx])
-        sats_occ = StepFuncSats(redshift=cat.redshifts[idx], cenocc_model = cens_occ)
+        sats_occ = StepFuncSats(redshift=cat.redshifts[idx])
     else:
         raise ValueError('%s invalid input for HOD' % HOD)
 
