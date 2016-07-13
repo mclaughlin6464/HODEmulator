@@ -1,4 +1,5 @@
 # This module is similar to testSeveralSteps, but with an increase in scale.
+#@Author Sean McLaughlin
 import numpy as np
 from time import time
 from os import path
@@ -8,7 +9,7 @@ import argparse
 from myCats import cat_dict
 from allCorrFunc import loadHaloAndModel, popAndCorr
 
-# Given from Elisabeth from on high
+# Given by Elisabeth from on high
 BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
           'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
 
@@ -28,6 +29,8 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
         pass  # WOOPWOOP ERROR
         # TODO error here
 
+    #TODO if user passed in fixed_params and n_per_dim but they have different keys!
+
     values = {}
     for param in BOUNDS.iterkeys():
         if param in fixed_params:
@@ -38,11 +41,11 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
 
     n_total = np.prod(n_per_dim.values())
     points = [{} for i in xrange(n_total)]
-    fixed_base = '_'.join('%s:%.2f' % (key, val) for key, val in fixed_params.iteritems()) + '_'
+    fixed_base = '_'.join('%s%.2f' % (key, val) for key, val in fixed_params.iteritems()) + '_'
     outbase = [fixed_base for i in xrange(n_total)]
 
     n_segment = n_total  # not necessary, but notaionally clearer
-    for param in sorted(BOUNDS.iterkeys()):  # sorted to make deterministic
+    for param in sorted(BOUNDS.iterkeys()):  # sorted to make deterministic, though it may already be.
         n_segment /= n_per_dim[param]
         for i, p in enumerate(points):
             idx = (i / n_segment) % n_per_dim[param]
@@ -69,9 +72,13 @@ def calc_galaxy_autocorr(simname, scale_factor, outbase, params={}, **kwargs):
     print str(cat)
     halocat, model = loadHaloAndModel(cat, 'redMagic', scale_factor)
     data, cov = popAndCorr(halocat, model, cat, params, N_PTCL, RBINS)
-
-    np.savetxt(outbase + '_corr_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), data)
-    np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), cov)
+    header_start = ['Cosmology: %s'%simname, 'Params for HOD:' ]
+    header_start.extend('%s:%.3f'%(key,val) for key, val in params.iteritems())
+    header = '\n'.join(header_start)
+    np.savetxt(outbase + '_corr_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), data,
+            header = header)
+    np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), cov,
+            header = header)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
 
@@ -89,7 +96,12 @@ if __name__ == '__main__':
 
     outputdir = args['outputdir']
     del args['outputdir']
+    for key in args.keys():
+        if args[key] is not None:
+            args[key] = float(args[key])
+        else:
+            del args[key]
 
     #pretty smart if i say so myself
     #leave default nperdim for now..
-    paramCube(args['outputdir'], fixed_params=args)
+    paramCube(outputdir, fixed_params=args)
