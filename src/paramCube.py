@@ -16,7 +16,7 @@ BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.
 SIMNAME = 'chinchilla'  # hardcode for noew
-REDSHIFT = 0.5
+REDSHIFT = 0.0#0.5
 N_PTCL = 200
 RBINS = np.logspace(-1, 1.7, 20)
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
@@ -30,9 +30,6 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
         # TODO error here
 
     #TODO if user passed in fixed_params and n_per_dim but they have different keys!
-
-    print fixed_params
-    return
 
     values = {}
     for param in BOUNDS.iterkeys():
@@ -54,7 +51,6 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
             idx = (i / n_segment) % n_per_dim[param]
             p[param] = values[param][idx]
             outbase[i] += str(idx)  # now each outbase has a unique combination of indexes
-
     # now each dictionary in values carries a unique combination of parameters for the emulator
     # if memory was an issue one could just run the model at each step instead of generating them all.
     # i don't think 1000 dictionaries is the worst of my memory issues.
@@ -62,6 +58,7 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
     # now, send each fo these to my code.
     for p, out in izip(points, outbase):
         #TODO worried there won't be an exact scale factor for this redshift.
+        print p,out
         calc_galaxy_autocorr(SIMNAME, 1 / (1 + REDSHIFT), path.join(outputdir, out), params=p, Lbox=400, npart=2048)
 
 
@@ -107,4 +104,5 @@ if __name__ == '__main__':
 
     #pretty smart if i say so myself
     #leave default nperdim for now..
+    print args
     paramCube(outputdir, fixed_params=args)

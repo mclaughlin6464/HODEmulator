@@ -10,7 +10,7 @@ from paramCube import BOUNDS
 
 outputdir='/u/ki/swmclau2/des/EmulatorData/'
 
-queue = 'bulletmpi'
+queue = 'medium'
 
 for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num = 5):
     for alpha in np.linspace(BOUNDS['alpha'][0], BOUNDS['alpha'][1], num=5):
@@ -18,11 +18,13 @@ for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num = 5):
 
             jobname = 'Emulator_fc_%.2f_a_%.2f_M1_%.2f'%(f_c, alpha, logM1)
             print jobname
+
             logfile = jobname + '.out'
             command = ['bsub',
                        '-q', queue,
+                       '-n', str(16),
                        '-J', jobname,
-                       '-o', path.join(outputdir, logfile),
+                       '-oo', path.join(outputdir, logfile),
                        '-W', '12:00',
                        'python', path.join(path.dirname(__file__), 'paramCube.py'),
                        outputdir,
@@ -31,3 +33,5 @@ for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num = 5):
                        '--logM1', str(logM1)]
             call(command)
             break
+        break
+    break

@@ -78,7 +78,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
         idx = cat.scale_factors.index(scale_factor)
     except ValueError:
         print 'Provided scale_factor %.3f not cached for %s.' % (scale_factor, cat.simname)
-        idx = np.argmin(np.abs(cat.scale_factors - scale_factor))
+        idx = np.argmin(np.abs(np.array(cat.scale_factors) - scale_factor))
         if np.abs(cat.scale_factors[idx] - scale_factor) < SF_TOLERANCE:
             print 'Using %.3f instead.'%cat.scale_factors[idx]
         else:
@@ -144,7 +144,7 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     '''
     # TODO way to decide which of these to call.
     randoms = np.random.random(
-        (pos.shape[0] * 20, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
+        (pos.shape[0] * 5, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
     xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
                                     num_threads=cpu_count())
 
