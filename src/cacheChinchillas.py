@@ -2,8 +2,8 @@
 #Tmp helper script i'm writing to cache and cross-correlate all the chinchillas there are.
 
 from os import mkdir, path
-from src.cacheHalocat import cacheHalocat
-from src.allCorrFunc import corrFunc
+from cacheHalocat import cacheHalocat
+from allCorrFunc import corrFunc
 
 simname = 'chinchilla'
 boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 2048),

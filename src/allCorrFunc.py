@@ -144,7 +144,8 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     '''
     # TODO way to decide which of these to call.
     randoms = np.random.random(
-        (pos.shape[0] * 5, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
+        (pos.shape[0] * 1, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
+    print 'going...'
     xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
                                     num_threads=cpu_count())
 

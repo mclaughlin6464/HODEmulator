@@ -6,11 +6,9 @@ from subprocess import call
 from os import path
 import numpy as np
 
-from paramCube import BOUNDS
-
 outputdir='/u/ki/swmclau2/des/EmulatorData/'
 
-queue = 'medium'
+queue = 'bulletmpi'
 
 BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
           'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
