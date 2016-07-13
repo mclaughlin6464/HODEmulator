@@ -31,6 +31,8 @@ PI_MAX = 40
 
 RBINS = np.logspace(-1, 1.7, 20)
 
+SF_TOLERANCE = 0.05 #tolerance within a passed in scale factor we'll use.
+
 
 # TODO change name so as to not overlap with CorrFunc
 # TODO N_PTCL and npart different, which is confusing! Clarify
@@ -76,7 +78,12 @@ def loadHaloAndModel(cat, HOD, scale_factor):
         idx = cat.scale_factors.index(scale_factor)
     except:
         print 'Provided scale_factor %.3f not cached for %s.' % (scale_factor, cat.simname)
-        raise
+        idx = np.argmin(np.abs(cat.scale_factors - scale_factor))
+        if np.abs(cat.scale_factors[idx] - scale_factor) < SF_TOLERANCE:
+            print 'Using %.3f instead.'%cat.scale_factors[idx]
+        else:
+            print 'No value found close enough.'
+            raise
 
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
