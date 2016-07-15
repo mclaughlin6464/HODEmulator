@@ -39,7 +39,11 @@ def get_training_data(fixed_params = {}):
     cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files) * NBINS  # each file contains NBINS points in r, and each file is a 6-d point
 
-    x = np.zeros((npoints, 7))
+    varied_params = set(PARAMS)-set(fixed_params.keys())
+
+    ndim = len(varied_params)
+
+    x = np.zeros((npoints, ndim))
     y = np.zeros((npoints,))
     yerr = np.zeros((npoints,))
 
@@ -53,7 +57,7 @@ def get_training_data(fixed_params = {}):
             continue
 
         #doing some shuffling and stacking
-        file_params = [np.ones((NBINS,)) * params[p] for p in PARAMS]
+        file_params = [np.ones((NBINS,)) * params[p] for p in varied_params]
         file_params.append(np.log10(r))
 
         x[idx * NBINS:(idx + 1) * NBINS, :] = np.stack(file_params).T

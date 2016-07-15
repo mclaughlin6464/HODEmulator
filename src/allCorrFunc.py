@@ -46,11 +46,11 @@ def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, n_ptcl
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
-    data, cov = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
-    #data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+    #data, cov = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+    data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
 
     np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
-    np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
+    #np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
 
@@ -125,7 +125,6 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
 
     # TODO N procs
     t0 = time()
-    '''
     if CORRFUNC:
         #write bins to file
         BINDIR = dirname(abspath(__file__))  # location of files with bin edges
@@ -147,6 +146,7 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
         (pos.shape[0] * 5, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
     xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
                                     num_threads=cpu_count(), Nsub = 5)
+    '''
     print 'Corr Calc Time: %.3f s' % (time() - t0)
     # halo_hostid = model.mock.galaxy_table['halo_id']
 
@@ -159,7 +159,7 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     rbin_centers = (rbins[1:] + rbins[:-1]) / 2
     output = np.stack([rbin_centers, xi_all])  # , xi_1h, xi_2h])
 
-    return output, xi_cov
+    return output#, xi_cov
 
 
     # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
