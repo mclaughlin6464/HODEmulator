@@ -26,7 +26,7 @@ if __name__ == "__main__":
                            '-n', str(16),
                            '-J', jobname,
                            '-oo', path.join(outputdir, logfile),
-                           '-W', '12:00',
+                           '-W', '6:00',
                            'python', path.join(path.dirname(__file__), 'paramCube.py'),
                            outputdir,
                            '--f_c', str(f_c),

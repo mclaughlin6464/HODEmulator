@@ -47,6 +47,7 @@ def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, n_ptcl
     print str(cat)
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
     data, cov = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+    #data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
 
     np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
     np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
@@ -141,16 +142,13 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     else:
 
         xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
-    '''
     # TODO way to decide which of these to call.
+    '''
     randoms = np.random.random(
-        (pos.shape[0] * 1, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
-    print 'going...'
+        (pos.shape[0] * 5, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
     xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
-                                    num_threads=cpu_count())
-
+                                    num_threads=cpu_count(), Nsub = 5)
     print 'Corr Calc Time: %.3f s' % (time() - t0)
-
     # halo_hostid = model.mock.galaxy_table['halo_id']
 
     # xi_1h, xi_2h = tpcf_one_two_halo_decomp(pos*cat.h,

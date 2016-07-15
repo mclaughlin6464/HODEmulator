@@ -28,7 +28,7 @@ if KILS:
                     'chinchilla': '/nfs/slac/g/ki/ki21/cosmo/yymao/sham_test/resolution-test/',
                     'aardvark': '/nfs/slac/g/ki/ki18/des/mbusha/simulations/Aardvark-2PS/Lb400/rockstar/hlists/',
                     'guppy': '/u/ki/swmclau2/des/guppy/',
-                    'chinchilla1050': '/u/ki/swmclau2/des/rockstar_outputs/'}
+                    'chinchilla1050': '/u/ki/swmclau2/des/chinchilla1050/'}
 
     CACHE_LOCS = {'cat': '/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s.hdf5',
                   'chinchilla': '/u/ki/swmclau2/des/halocats/hlist_%.2f.list.%s_%s.hdf5'}

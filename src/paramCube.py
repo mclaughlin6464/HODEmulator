@@ -20,7 +20,6 @@ N_PTCL = 200
 RBINS = np.logspace(-1, 1.7, 20)
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 
-
 def paramCube(outputdir, fixed_params={}, n_per_dim=5):
     if type(n_per_dim) is int:
         n_per_dim = {key: n_per_dim for key in BOUNDS.iterkeys()}
@@ -57,7 +56,6 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
     # now, send each fo these to my code.
     for p, out in izip(points, outbase):
         #TODO worried there won't be an exact scale factor for this redshift.
-        print p,out
         calc_galaxy_autocorr(SIMNAME, 1 / (1 + REDSHIFT), path.join(outputdir, out), params=p, Lbox=400, npart=2048)
 
 
@@ -74,9 +72,9 @@ def calc_galaxy_autocorr(simname, scale_factor, outbase, params={}, **kwargs):
     header_start = ['Cosmology: %s'%simname, 'Params for HOD:' ]
     header_start.extend('%s:%.3f'%(key,val) for key, val in params.iteritems())
     header = '\n'.join(header_start)
-    np.savetxt(outbase + '_corr_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), data,
+    np.savetxt(outbase + '_corr_%.3f.npy' % (scale_factor), data,
             header = header)
-    np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor, 'redMagic', params['logMmin']), cov,
+    np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor), cov,
             header = header)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
