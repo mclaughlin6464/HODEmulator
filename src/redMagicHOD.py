@@ -18,10 +18,8 @@ class RedMagicCens(Zheng07Cens):
         #load defaults  
         #if 'f_c' not in self.param_dict:
         #    self.param_dict['f_c'] = 0.19 #add in best fit of new param.
-        print self.param_dict
 
         self.param_dict.update(defaults)
-        print self.param_dict
 
     def mean_occupation(self, **kwargs):
         "See Zheng07 for details"
