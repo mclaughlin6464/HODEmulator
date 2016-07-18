@@ -19,8 +19,6 @@ try:
 except ImportError:
     CORRFUNC = False
 
-CORRFUNC = False
-
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
