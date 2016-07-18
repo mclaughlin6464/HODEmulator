@@ -175,7 +175,7 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, n_ptcl=N_PTCL
         return output
 
 
-        # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
+       # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
         # np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
         # np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
