@@ -1,12 +1,10 @@
 # @Author Sean McLaughlin
 # Send a collection of calls to paramCube to ki-ls
-import numpy as np
-import pandas as pd
 from subprocess import call
 from os import path
 import numpy as np
 
-system = 'ki-ls'  # 'sherlock'
+system = 'sherlock'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
 elif system == 'sherlock':
@@ -34,7 +32,7 @@ def make_kils_command(jobname, params, queue='bulletmpi'):
     param_list = []
     for param, val in params.iteritems():
         param_list.append('--%s' % param)
-        param_list.append(val)
+        param_list.append(str(val))
 
     command.extend(param_list)
 
@@ -51,21 +49,23 @@ def make_sherlock_command(jobname, params):
                '--error', errfile,
                '--time', '%d:00'%TIME,
                '--qos','normal',
-               '--noes',1,
+               '--noes',str(1),
                '--exclusive',
-               '--nstasks-per-node',1,
-               '--cpus-per-task',16,
+               '--nstasks-per-node',str(1),
+               '--cpus-per-task',str(16),
                'python', path.join(path.dirname(__file__), 'paramCube.py'),
                outputdir]
 
     param_list = []
     for param, val in params.iteritems():
         param_list.append('--%s' % param)
-        param_list.append(val)
+        param_list.append(str(val))
 
     command.extend(param_list)
 
-make_command = make_kils_command if system=='ki-ls' else make_sherlock_command()
+    return command
+
+make_command = make_kils_command if system=='ki-ls' else make_sherlock_command
 
 if __name__ == "__main__":
     for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num=N_PER_DIM):
