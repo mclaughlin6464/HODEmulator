@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
                 logfile = jobname + '.out'
                 command = make_command(jobname, params)
-                #print ' '.join(command)
+                print ' '.join(command)
                 call(command)
                 break
             break
