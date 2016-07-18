@@ -10,7 +10,7 @@ import george
 from george.kernels import *
 
 DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
-NBINS = 19
+NBINS = 19 # TODO consider just getting this number from the files
 #In general, the params don't need to be ordered
 #However, at this final step consistancy is necessary.
 #This list defines that order.
@@ -76,13 +76,13 @@ def get_training_data(fixed_params = {}):
 def build_emulator(fixed_params = {}):
     ndim = len(PARAMS) - len(fixed_params)
 
-    x,y,yerr = get_training_data(fixed_params)
+    x,xi,xi_err = get_training_data(fixed_params)
 
     metric = (1.0 for i in xrange(ndim)) #could make better guesses:
     a = 1e5
     kernel = a * ExpSquaredKernel(metric, ndim=2)
     gp = george.GP(kernel)
-    gp.compute(x, yerr)
+    gp.compute(x, xi_err)
 
     def nll(p):
         # Update the kernel parameters and compute the likelihood.
@@ -108,4 +108,18 @@ def build_emulator(fixed_params = {}):
 
     gp.kernel[:] = results.x
 
-    return gp , y
+    return gp , xi
+
+# unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
+#just having them be len(x)==1 dicts seems silly.
+def emulate(gp, xi, fixed_params, x_param, x_points, y_param = None, y_points = None):
+
+    #check that all params have been accounted for!
+    #could wrap this in a try block to make it more informative
+    input_params = set(fixed_params) | set([x_param])
+    if y_param is not None:
+        input_params.add(y_param)
+    assert input_params == set(PARAMS)
+
+    assert np.all(y is None for y in [y_param, y_points] ) or np.all(y is not None for y in [y_param, y_points])
+
