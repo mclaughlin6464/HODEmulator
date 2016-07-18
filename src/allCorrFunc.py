@@ -26,17 +26,18 @@ from myCats import *
 
 print 'CORRFUNC: %s' % CORRFUNC
 
-N_PTCL = 0
+N_PTCL = 200
 PI_MAX = 40
 
-RBINS = np.logspace(-1, 1.7, 20)
+RBINS = np.delete(np.logspace(-1, 1.6, 20), [1]) #make the first bin 2x as big.
 
-SF_TOLERANCE = 0.05 #tolerance within a passed in scale factor we'll use.
+SF_TOLERANCE = 0.05  # tolerance within a passed in scale factor we'll use.
 
 
 # TODO change name so as to not overlap with CorrFunc
 # TODO N_PTCL and npart different, which is confusing! Clarify
-def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={},do_jackknife = False, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
+def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jackknife=False, n_ptcl=N_PTCL,
+             rbins=RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 
     if not isdir(outputdir):
@@ -48,18 +49,19 @@ def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={},do_jack
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
 
     if do_jackknife:
-        data, cov = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+        data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
         np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
 
     else:
-        data = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+        data = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
 
-    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f_nj.npy' % (scale_factor, HOD, params['logMmin']), data)
+    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
 
 
-def allCorrFunc(simname, outputdir, HOD='redmagic', params={},do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
+def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS,
+                **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
     # t0 = time()
     if not isdir(outputdir):
@@ -71,11 +73,11 @@ def allCorrFunc(simname, outputdir, HOD='redmagic', params={},do_jackknife=False
         halocat, model = loadHaloAndModel(cat, HOD, a)
 
         if do_jackknife:
-            data, cov = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+            data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
             np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), cov)
 
         else:
-            data = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+            data = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
 
         np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), data)
 
@@ -90,14 +92,14 @@ def loadHaloAndModel(cat, HOD, scale_factor):
         print 'Provided scale_factor %.3f not cached for %s.' % (scale_factor, cat.simname)
         idx = np.argmin(np.abs(np.array(cat.scale_factors) - scale_factor))
         if np.abs(cat.scale_factors[idx] - scale_factor) < SF_TOLERANCE:
-            print 'Using %.3f instead.'%cat.scale_factors[idx]
+            print 'Using %.3f instead.' % cat.scale_factors[idx]
         else:
             print 'No value found close enough.'
             raise
 
     if HOD == 'redMagic':
         cens_occ = RedMagicCens(redshift=cat.redshifts[idx])
-        sats_occ = RedMagicSats(redshift=cat.redshifts[idx], cenocc_model = cens_occ)  # ,modulate_with_cenocc = True)
+        sats_occ = RedMagicSats(redshift=cat.redshifts[idx], cenocc_model=cens_occ)  # ,modulate_with_cenocc = True)
         # sats_occ.central_occupation_model = cens_occ #Hack, remove if Halotools gets updated
     elif HOD == 'stepFunc':
         cens_occ = StepFuncCens(redshift=cat.redshifts[idx])
@@ -118,8 +120,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
     return halocat, model
 
 
-
-def popAndCorr(halocat, model, cat, params={},do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS):
+def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS):
     '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
     print 'Min Num Particles: %d\t%d bins' % (n_ptcl, len(rbins))
     model.param_dict.update(params)  # insert new params into model
@@ -143,20 +144,20 @@ def popAndCorr(halocat, model, cat, params={},do_jackknife=False, n_ptcl=N_PTCL,
         xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
                                         num_threads=cpu_count(), Nsub=Nsub)
     elif CORRFUNC:
-        #write bins to file
+        # write bins to file
         BINDIR = dirname(abspath(__file__))  # location of files with bin edges
-        with open(join(BINDIR , './binfile'), 'w') as f:
+        with open(join(BINDIR, './binfile'), 'w') as f:
             for low, high in zip(RBINS[:-1], RBINS[1:]):
                 f.write('\t%f\t%f\n' % (low, high))
 
-        #countpairs requires casting in order to work right.
-        xi_all = countpairs_xi(model.mock.Lbox*cat.h, cpu_count(), join(BINDIR,'./binfile'),
-                x.astype('float32')*cat.h, y.astype('float32')*cat.h, z.astype('float32')*cat.h )
-        xi_all = np.array(xi_all, dtype = 'float64')[:,3]
+        # countpairs requires casting in order to work right.
+        xi_all = countpairs_xi(model.mock.Lbox * cat.h, cpu_count(), join(BINDIR, './binfile'),
+                               x.astype('float32') * cat.h, y.astype('float32') * cat.h, z.astype('float32') * cat.h)
+        xi_all = np.array(xi_all, dtype='float64')[:, 3]
 
     else:
 
-        xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
+        xi_all = tpcf(pos * cat.h, RBINS, period=model.mock.Lbox * cat.h, num_threads=cpu_count())
 
     print 'Corr Calc Time: %.3f s' % (time() - t0)
     # halo_hostid = model.mock.galaxy_table['halo_id']
@@ -176,9 +177,9 @@ def popAndCorr(halocat, model, cat, params={},do_jackknife=False, n_ptcl=N_PTCL,
         return output
 
 
-    # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
-    # np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
-    # np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
+        # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
+        # np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
+        # np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
 
 if __name__ == '__main__':

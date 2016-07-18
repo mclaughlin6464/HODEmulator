@@ -7,7 +7,7 @@ from itertools import izip
 import argparse
 
 from myCats import cat_dict
-from allCorrFunc import loadHaloAndModel, popAndCorr
+from allCorrFunc import loadHaloAndModel, popAndCorr, RBINS, N_PTCL
 from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to ahve ti there.
 # Given by Elisabeth from on high
 
@@ -16,8 +16,8 @@ from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to 
 # Will have to see how i end up using this.
 SIMNAME = 'chinchilla'  # hardcode for noew
 REDSHIFT = 0.0#0.5
-N_PTCL = 200
-RBINS = np.logspace(-1, 1.7, 20)
+#N_PTCL = 200
+
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 
 def paramCube(outputdir, fixed_params={}, n_per_dim=5):
