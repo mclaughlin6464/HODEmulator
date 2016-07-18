@@ -43,15 +43,15 @@ def make_sherlock_command(jobname, params):
     logfile = jobname+'.out'
     errfile = jobname+'.err'
 
-    command = ['bsub',
+    command = ['sbatch',
                '--job-name', jobname,
-               '--output', logfile,
-               '--error', errfile,
+               '--output', path.join(outputdir, logfile),
+               '--error', path.join(outputdir, errfile),
                '--time', '%d:00'%TIME,
                '--qos','normal',
-               '--noes',str(1),
+               '--nodes',str(1),
                '--exclusive',
-               '--nstasks-per-node',str(1),
+               '--ntasks-per-node',str(1),
                '--cpus-per-task',str(16),
                'python', path.join(path.dirname(__file__), 'paramCube.py'),
                outputdir]
@@ -77,6 +77,7 @@ if __name__ == "__main__":
 
                 logfile = jobname + '.out'
                 command = make_command(jobname, params)
+                #print ' '.join(command)
                 call(command)
                 break
             break
