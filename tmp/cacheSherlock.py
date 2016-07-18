@@ -19,7 +19,7 @@ scale_factor = 1.0
 t0 = time()
 for simname, kwargs in sims.iteritems():
     print simname
-    print 'Time: %.3f'%(time()-t0)	
+    print 'Time: %.3f'%(time()-t0)
     try:
         if len(kwargs) == 0:
             cacheHalocat(simname)
@@ -32,6 +32,6 @@ for simname, kwargs in sims.iteritems():
 
     except:
         print 'An error occured for %s'%simname
-        print 'Time: %.3f'%(time()-t0)	
+        print 'Time: %.3f'%(time()-t0)
         #continue
         raise
