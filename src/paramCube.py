@@ -55,7 +55,6 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
 
     # now, send each fo these to my code.
     for p, out in izip(points, outbase):
-        #TODO worried there won't be an exact scale factor for this redshift.
         calc_galaxy_autocorr(SIMNAME, 1 / (1 + REDSHIFT), path.join(outputdir, out), params=p, Lbox=400, npart=2048)
 
 

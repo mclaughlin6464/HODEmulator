@@ -36,7 +36,7 @@ SF_TOLERANCE = 0.05 #tolerance within a passed in scale factor we'll use.
 
 # TODO change name so as to not overlap with CorrFunc
 # TODO N_PTCL and npart different, which is confusing! Clarify
-def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
+def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={},do_jackknife = False, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 
     if not isdir(outputdir):
@@ -46,16 +46,20 @@ def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, n_ptcl
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
-    #data, cov = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
-    data = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
 
-    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
-    #np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
+    if do_jackknife:
+        data, cov = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+        np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
+
+    else:
+        data = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+
+    np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f_nj.npy' % (scale_factor, HOD, params['logMmin']), data)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
 
 
-def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
+def allCorrFunc(simname, outputdir, HOD='redmagic', params={},do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS, **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
     # t0 = time()
     if not isdir(outputdir):
@@ -65,10 +69,15 @@ def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, n_ptcl=N_PTCL, rb
     print str(cat)
     for a in cat.scale_factors:
         halocat, model = loadHaloAndModel(cat, HOD, a)
-        data, cov = popAndCorr(halocat, model, cat, params, n_ptcl, rbins)
+
+        if do_jackknife:
+            data, cov = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
+            np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), cov)
+
+        else:
+            data = popAndCorr(halocat, model, cat, params,do_jackknife, n_ptcl, rbins)
 
         np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), data)
-        np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), cov)
 
         # print 'Total Run Time: %.3f'%(time()-t0)
 
@@ -110,7 +119,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
 
 
 
-def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
+def popAndCorr(halocat, model, cat, params={},do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS):
     '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
     print 'Min Num Particles: %d\t%d bins' % (n_ptcl, len(rbins))
     model.param_dict.update(params)  # insert new params into model
@@ -123,9 +132,17 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     # mask = model.mock.galaxy_table['halo_mvir'] < 1e15/cat.h
     pos = return_xyz_formatted_array(x, y, z)  # , mask = mask)
 
-    # TODO N procs
     t0 = time()
-    if CORRFUNC:
+
+    # TODO N procs
+    if do_jackknife:
+        Nrands = 5
+        Nsub = 5
+        randoms = np.random.random(
+            (pos.shape[0] * Nrands, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
+        xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
+                                        num_threads=cpu_count(), Nsub=Nsub)
+    elif CORRFUNC:
         #write bins to file
         BINDIR = dirname(abspath(__file__))  # location of files with bin edges
         with open(join(BINDIR , './binfile'), 'w') as f:
@@ -140,13 +157,7 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     else:
 
         xi_all = tpcf(pos*cat.h, RBINS, period = model.mock.Lbox*cat.h, num_threads =  cpu_count())
-    # TODO way to decide which of these to call.
-    '''
-    randoms = np.random.random(
-        (pos.shape[0] * 5, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
-    xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
-                                    num_threads=cpu_count(), Nsub = 5)
-    '''
+
     print 'Corr Calc Time: %.3f s' % (time() - t0)
     # halo_hostid = model.mock.galaxy_table['halo_id']
 
@@ -159,7 +170,10 @@ def popAndCorr(halocat, model, cat, params={}, n_ptcl=N_PTCL, rbins=RBINS):
     rbin_centers = (rbins[1:] + rbins[:-1]) / 2
     output = np.stack([rbin_centers, xi_all])  # , xi_1h, xi_2h])
 
-    return output#, xi_cov
+    if do_jackknife:
+        return output, xi_cov
+    else:
+        return output
 
 
     # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
