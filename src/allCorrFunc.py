@@ -51,11 +51,11 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
     halocat = CachedHaloCatalog(simname = cat.simname, halo_finder = cat.halo_finder,version_name = cat.version_name, redshift = cat.redshifts[idx])
 
     model = HodModelFactory(
-        #centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
-        centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
+        centrals_occupation=RedMagicCens(redshift=cat.redshifts[idx]),
+        #centrals_occupation=StepFuncCens(redshift=cat.redshifts[idx]),
         centrals_profile=TrivialPhaseSpace(redshift=cat.redshifts[idx]),
-        #satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True),#TODO consider putting this in redMagicSats intself
-        satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
+        satellites_occupation=RedMagicSats(redshift=cat.redshifts[idx],modulate_with_cenocc = True),#TODO consider putting this in redMagicSats intself
+        #satellites_occupation=StepFuncSats(redshift=cat.redshifts[idx]),
         satellites_profile=NFWPhaseSpace(redshift=cat.redshifts[idx]))
 
     model.param_dict['logMmin'] = logMmin# - np.log10(cat.h) #this is gonna have to obviously be changed when merged with the other branch.
@@ -87,7 +87,7 @@ def _corrFunc(cat, scale_factor, outputdir, plot = False, logMmin = 12.1):
 
     output = np.stack([RBIN_CENTERS, xi_all, xi_1h, xi_2h])
 
-    np.savetxt(outputdir + 'corr_%.3f_stepFunc_mm_%.2f.npy' %(scale_factor, logMmin), output)
+    np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
     #np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
 
     #np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
