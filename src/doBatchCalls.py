@@ -44,15 +44,15 @@ def make_sherlock_command(jobname, params):
     errfile = jobname+'.err'
 
     command = ['sbatch',
-               '--job-name', jobname,
-               '--output', path.join(outputdir, logfile),
-               '--error', path.join(outputdir, errfile),
-               '--time', '%d:00'%TIME,
-               '--qos','normal',
-               '--nodes',str(1),
+               '--job-name=%s'%jobname,
+               '--output=%s'%path.join(outputdir, logfile),
+               '--error=%s'%path.join(outputdir, errfile),
+               '--time=%d:00'%TIME,
+               '--qos=normal',
+               '--nodes=%d'%1,
                '--exclusive',
-               '--ntasks-per-node',str(1),
-               '--cpus-per-task',str(16),
+               '--ntasks-per-node=%d'%1,
+               '--cpus-per-task=%d'%16,
                'python', path.join(path.dirname(__file__), 'paramCube.py'),
                outputdir]
 
