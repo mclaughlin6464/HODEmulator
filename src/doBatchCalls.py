@@ -43,7 +43,7 @@ def make_sherlock_command(jobname, params):
     logfile = jobname+'.out'
     errfile = jobname+'.err'
 
-    command = ['sbatch',
+    sbatch_header = ['#!/bin/bash',
                '--job-name=%s'%jobname,
                '--output=%s'%path.join(outputdir, logfile),
                '--error=%s'%path.join(outputdir, errfile),
@@ -52,18 +52,23 @@ def make_sherlock_command(jobname, params):
                '--nodes=%d'%1,
                '--exclusive',
                '--ntasks-per-node=%d'%1,
-               '--cpus-per-task=%d'%16,
-               'python', path.join(path.dirname(__file__), 'paramCube.py'),
+               '--cpus-per-task=%d'%16]
+
+    sbatch_header = '\n#SBATCH '.join(sbatch_header)
+
+    call_str =['python', path.join(path.dirname(__file__), 'paramCube.py'),
                outputdir]
 
-    param_list = []
     for param, val in params.iteritems():
-        param_list.append('--%s' % param)
-        param_list.append(str(val))
+        call_str.append('--%s' % param)
+        call_str.append(str(val))
 
-    command.extend(param_list)
+    call_str = ' '.join(call_str)
 
-    return command
+    with open('./tmp.sbatch', 'w') as f:
+        f.write(sbatch_header + '\n' + call_str)
+
+    return 'sbatch ./tmp.sbatch'
 
 make_command = make_kils_command if system=='ki-ls' else make_sherlock_command
 
