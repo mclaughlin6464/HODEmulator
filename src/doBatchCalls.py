@@ -43,7 +43,7 @@ def make_sherlock_command(jobname, params):
     logfile = jobname+'.out'
     errfile = jobname+'.err'
 
-    command = ['sbatch',
+    command = ['srun',
                '--job-name=%s'%jobname,
                '--output=%s'%path.join(outputdir, logfile),
                '--error=%s'%path.join(outputdir, errfile),
@@ -53,7 +53,7 @@ def make_sherlock_command(jobname, params):
                '--exclusive',
                '--ntasks-per-node=%d'%1,
                '--cpus-per-task=%d'%16,
-               'python', path.join(path.dirname(__file__), 'paramCube.py'),
+               'python',path.join(path.dirname(__file__), 'paramCube.py'),
                outputdir]
 
     param_list = []
@@ -62,6 +62,8 @@ def make_sherlock_command(jobname, params):
         param_list.append(str(val))
 
     command.extend(param_list)
+
+    command.append('&')
 
     return command
 
@@ -77,7 +79,7 @@ if __name__ == "__main__":
 
                 logfile = jobname + '.out'
                 command = make_command(jobname, params)
-                #print ' '.join(command)
+                print ' '.join(command)
                 call(command)
                 break
             break
