@@ -9,8 +9,10 @@ import scipy.optimize as op
 import george
 from george.kernels import *
 
+from allCorrFunc import RBINS
+
 DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
-NBINS = 19  # TODO consider just getting this number from the files
+NBINS = len(RBINS)
 # In general, the params don't need to be ordered
 # However, at this final step consistancy is necessary.
 # This list defines that order.
@@ -21,7 +23,7 @@ def file_reader(corr_file, cov_file):
     '''Data is stored in two formats. Numpy writes r and xi, and the comments hold what parameters they describe.
     I'll use numpy to load the r and xi and read the file manually to get the params.'''
 
-    # TODO check filename exists, etc.
+    assert path.exists(corr_file) and path.exists(cov_file)
     r, xi = np.loadtxt(corr_file)  # not sure if this will work, might nead to transpose
     cov = np.loadtxt(cov_file)
     params = {}
@@ -57,6 +59,8 @@ def get_training_data(fixed_params={}):
         # or, a more nuanced file structure
         if any(params[key] != val for key, val in fixed_params.iteritems()):
             continue
+
+        assert NBINS == len(r)#at least it'll throw an error if there's an issue.
 
         # doing some shuffling and stacking
         file_params = []

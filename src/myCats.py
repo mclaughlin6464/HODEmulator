@@ -13,10 +13,8 @@ __all__ = ['Bolshoi', 'Multidark', 'Emu', 'Fox', 'MDHR', 'Chinchilla', 'Aardvark
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-KILS = True  # TODO fixme
+KILS = True  # TODO
 SF_TOLERANCE = 0.05
-
-# TODO each cat should carry a default output script, to which specific information is added.
 
 # set filepaths depending on which cluster we're on.
 if KILS:

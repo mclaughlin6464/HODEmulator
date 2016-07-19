@@ -9,7 +9,7 @@ from myCats import *
 
 def cacheHalocat(simname,  **kwargs):
 
-    cat = cat_dict[simname](**kwargs) #TODO better handling of arguements
+    cat = cat_dict[simname](**kwargs)
 
     for i in xrange(len(cat)): #Pythonic iteration?
         reader = RockstarHlistReader(cat.filenames[i], cat.columns_to_keep, cat.cache_locs[i], cat.simname,
@@ -23,7 +23,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = desc)
     parser.add_argument('simname', metavar='simname', type=str,
                         help='The name of the simulation to cache. Defaults are stored in the myCats module.')
-    #TODO do I want to have an advanced CLI? Connect to kwargs at all?
     parser.add_argument('--scale_factor', type = float, help = 'Scale factor to cache. Default is all. ')
     args = parser.parse_args()
     if args.scale_factor is None:

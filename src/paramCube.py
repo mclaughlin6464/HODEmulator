@@ -7,7 +7,7 @@ from itertools import izip
 import argparse
 
 from myCats import cat_dict
-from allCorrFunc import loadHaloAndModel, popAndCorr, RBINS, N_PTCL
+from allCorrFunc import loadHaloAndModel, popAndCorr, RBINS, MIN_PTCL
 from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to ahve ti there.
 # Given by Elisabeth from on high
 
@@ -23,11 +23,8 @@ RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 def paramCube(outputdir, fixed_params={}, n_per_dim=5):
     if type(n_per_dim) is int:
         n_per_dim = {key: n_per_dim for key in BOUNDS.iterkeys()}
-    elif type(n_per_dim) is not dict:
-        pass  # WOOPWOOP ERROR
-        # TODO error here
 
-    #TODO if user passed in fixed_params and n_per_dim but they have different keys!
+    assert type(n_per_dim) is dict
 
     values = {}
     for param in BOUNDS.iterkeys():
