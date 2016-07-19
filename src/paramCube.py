@@ -15,7 +15,7 @@ from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.
 SIMNAME = 'chinchilla'  # hardcode for noew
-REDSHIFT = 0.0#0.5
+REDSHIFT = 0.5#0.0
 #N_PTCL = 200
 
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
@@ -61,20 +61,25 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=5):
 
 # mostly copied from allCorrFunc. I don't wanan break backwards compatibaility yet
 # but I need to make some changes here.
-def calc_galaxy_autocorr(simname, scale_factor, outbase, params={}, **kwargs):
+def calc_galaxy_autocorr(simname, scale_factor, outbase, params={},do_jackknife=True, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     t0 = time()
 
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     halocat, model = loadHaloAndModel(cat, 'redMagic', scale_factor)
-    data, cov = popAndCorr(halocat, model, cat, params, N_PTCL, RBINS)
+    if do_jackknife:
+        data, cov = popAndCorr(halocat, model, cat, params,do_jackknife=do_jackknife, N_PTCL, RBINS)
+    else:
+        data = popAndCorr(halocat, model, cat, params,do_jackknife=do_jackknife, N_PTCL, RBINS)
+
     header_start = ['Cosmology: %s'%simname, 'Params for HOD:' ]
     header_start.extend('%s:%.3f'%(key,val) for key, val in params.iteritems())
     header = '\n'.join(header_start)
     np.savetxt(outbase + '_corr_%.3f.npy' % (scale_factor), data,
             header = header)
-    np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor), cov,
+    if do_jackknife:
+        np.savetxt(outbase + '_cov_%.3f.npy' % (scale_factor), cov,
             header = header)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)

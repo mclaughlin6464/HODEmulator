@@ -26,13 +26,10 @@ if __name__ == "__main__":
                            '-n', str(16),
                            '-J', jobname,
                            '-oo', path.join(outputdir, logfile),
-                           '-W', '6:00',
+                           '-W', '24:00',
                            'python', path.join(path.dirname(__file__), 'paramCube.py'),
                            outputdir,
                            '--f_c', str(f_c),
                            '--alpha', str(alpha),
                            '--logM1', str(logM1)]
                 call(command)
-                break
-            break
-        break
