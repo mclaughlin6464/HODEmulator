@@ -16,7 +16,7 @@ from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to 
 # Will have to see how i end up using this.
 SIMNAME = 'chinchilla'  # hardcode for noew
 REDSHIFT = 0.0#0.5
-#N_PTCL = 200
+#MIN_PTCL = 200
 
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 
@@ -65,7 +65,7 @@ def calc_galaxy_autocorr(simname, scale_factor, outbase, params={}, **kwargs):
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     halocat, model = loadHaloAndModel(cat, 'redMagic', scale_factor)
-    data, cov = popAndCorr(halocat, model, cat, params, N_PTCL, RBINS)
+    data, cov = popAndCorr(halocat, model, cat, params, MIN_PTCL, RBINS)
     header_start = ['Cosmology: %s'%simname, 'Params for HOD:' ]
     header_start.extend('%s:%.3f'%(key,val) for key, val in params.iteritems())
     header = '\n'.join(header_start)
