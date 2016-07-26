@@ -15,8 +15,13 @@ from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.
 SIMNAME = 'chinchilla'  # hardcode for noew
+<<<<<<< HEAD
 REDSHIFT = 0.5#0.0
 #N_PTCL = 200
+=======
+REDSHIFT = 0.0#0.5
+#MIN_PTCL = 200
+>>>>>>> 4d7a85bd461e6fbe5c235bd7d24ae4fcaf9cfa94
 
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 
@@ -65,11 +70,15 @@ def calc_galaxy_autocorr(simname, scale_factor, outbase, params={},do_jackknife=
     cat = cat_dict[simname](**kwargs)
     print str(cat)
     halocat, model = loadHaloAndModel(cat, 'redMagic', scale_factor)
+<<<<<<< HEAD
     if do_jackknife:
         data, cov = popAndCorr(halocat, model, cat, params,do_jackknife, N_PTCL, RBINS)
     else:
         data = popAndCorr(halocat, model, cat, params,do_jackknife, N_PTCL, RBINS)
 
+=======
+    data, cov = popAndCorr(halocat, model, cat, params, MIN_PTCL, RBINS)
+>>>>>>> 4d7a85bd461e6fbe5c235bd7d24ae4fcaf9cfa94
     header_start = ['Cosmology: %s'%simname, 'Params for HOD:' ]
     header_start.extend('%s:%.3f'%(key,val) for key, val in params.iteritems())
     header = '\n'.join(header_start)
