@@ -24,7 +24,7 @@ from myCats import *
 
 print 'CORRFUNC: %s' % CORRFUNC
 
-N_PTCL = 200
+MIN_PTCL = 200
 PI_MAX = 40
 
 RBINS = np.delete(np.logspace(-1, 1.6, 20), [1]) #make the first bin 2x as big.
@@ -33,8 +33,7 @@ SF_TOLERANCE = 0.05  # tolerance within a passed in scale factor we'll use.
 
 
 # TODO change name so as to not overlap with CorrFunc
-# TODO N_PTCL and npart different, which is confusing! Clarify
-def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jackknife=False, n_ptcl=N_PTCL,
+def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jackknife=False, min_ptcl=MIN_PTCL,
              rbins=RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 
@@ -47,18 +46,18 @@ def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jac
     halocat, model = loadHaloAndModel(cat, HOD, scale_factor)
 
     if do_jackknife:
-        data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
+        data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, min_ptcl, rbins)
         np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), cov)
 
     else:
-        data = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
+        data = popAndCorr(halocat, model, cat, params, do_jackknife, min_ptcl, rbins)
 
     np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (scale_factor, HOD, params['logMmin']), data)
 
     print '\nTotal Time: %.3f\n' % (time() - t0)
 
 
-def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS,
+def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, do_jackknife=False, min_ptcl=MIN_PTCL, rbins=RBINS,
                 **kwargs):
     'Calculates cross correlations for all scale factors cached for one halocatalog'
     # t0 = time()
@@ -71,11 +70,11 @@ def allCorrFunc(simname, outputdir, HOD='redmagic', params={}, do_jackknife=Fals
         halocat, model = loadHaloAndModel(cat, HOD, a)
 
         if do_jackknife:
-            data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
+            data, cov = popAndCorr(halocat, model, cat, params, do_jackknife, min_ptcl, rbins)
             np.savetxt(outputdir + 'cov_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), cov)
 
         else:
-            data = popAndCorr(halocat, model, cat, params, do_jackknife, n_ptcl, rbins)
+            data = popAndCorr(halocat, model, cat, params, do_jackknife, min_ptcl, rbins)
 
         np.savetxt(outputdir + 'corr_%.3f_%s_mm_%.2f.npy' % (a, HOD, params['logMmin']), data)
 
@@ -118,13 +117,13 @@ def loadHaloAndModel(cat, HOD, scale_factor):
     return halocat, model
 
 
-def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, n_ptcl=N_PTCL, rbins=RBINS):
+def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, min_ptcl=MIN_PTCL, rbins=RBINS):
     '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
-    print 'Min Num Particles: %d\t%d bins' % (n_ptcl, len(rbins))
+    print 'Min Num Particles: %d\t%d bins' % (min_ptcl, len(rbins))
     model.param_dict.update(params)  # insert new params into model
     print model.param_dict
     # Note: slow
-    model.populate_mock(halocat, Num_ptcl_requirement=n_ptcl)
+    model.populate_mock(halocat, Num_ptcl_requirement=min_ptcl)
 
     # Now, calculate with Halotools builtin
     x, y, z = [model.mock.galaxy_table[c] for c in ['x', 'y', 'z']]
@@ -175,7 +174,7 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, n_ptcl=N_PTCL
         return output
 
 
-        # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
+       # np.savetxt(outputdir + 'corr_%.3f_default_mm_%.2f.npy' %(scale_factor, logMmin), output)
         # np.savetxt(outputdir + 'xi_cov_%.3f_default_125_2048.npy' %(scale_factor), xi_cov)
         # np.savetxt(outputdir + 'wp_all_%.3f_default.npy' %(scale_factor), wp_all)
 
