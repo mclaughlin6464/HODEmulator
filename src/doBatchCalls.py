@@ -7,12 +7,14 @@ import numpy as np
 system = 'ki-ls'#'sherlock'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
+    #outputdir = '/u/ki/swmclau2/des/TestData/'
+
 elif system == 'sherlock':
     outputdir = '/home/swmclau2/scratch/EmulatorData/'
 
 QUEUE = 'bulletmpi'
 N_PER_DIM = 4
-TIME = 6 #hours
+TIME = 2 #hours
 
 BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
           'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
@@ -30,6 +32,7 @@ def make_kils_command(jobname, params, queue='bulletmpi'):
                outputdir]
 
     param_list = []
+    #param_list.append('--test')
     for param, val in params.iteritems():
         param_list.append('--%s' % param)
         param_list.append(str(val))
