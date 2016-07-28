@@ -59,6 +59,7 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=4):
 
 # mostly copied from allCorrFunc. I don't wanan break backwards compatibaility yet
 # but I need to make some changes here.
+
 def calc_galaxy_autocorr(simname, scale_factor, outbase, params={},do_jackknife=True, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
     t0 = time()
