@@ -4,18 +4,20 @@
 from cacheHalocat import cacheHalocat
 from time import time
 
-sims = {}
-sims['emu'] = []#kwargs for each sim
-sims['multidark_highres'] = []
-sims['fox'] = []
+#sims = {}
+#sims['emu'] = []#kwargs for each sim
+#sims['multidark_highres'] = []
+#sims['fox'] = []
 
-boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 2048),
-                (250.0, 2560), (250.0, 512), (250.0, 768), (400.0, 1024),
-                (400.0, 2048), (400.0, 768)]
+#boxsize_npart = [(125.0, 1024),(125.0, 2048), (250.0, 1024), (250.0, 2048),
+#                (250.0, 2560), (250.0, 512), (250.0, 768), (400.0, 1024),
+#                (400.0, 2048), (400.0, 768)]
+boxsize_npart = [(400.0, 2048)]
+
 
 sims['chinchilla'] = [{'Lbox':lb, 'npart':np} for lb,np in boxsize_npart ]
 
-scale_factor = 1.0
+scale_factors = [2.0/3.0, 1.0]
 t0 = time()
 for simname, kwargs in sims.iteritems():
     print simname
@@ -27,7 +29,7 @@ for simname, kwargs in sims.iteritems():
             for kw in kwargs:
 		#only do z = 0 for cinchillas
                 print kw
-                cacheHalocat(simname, scale_factors=[scale_factor], **kw)
+                cacheHalocat(simname, scale_factors=scale_factors, **kw)
         print
 
     except:
