@@ -4,7 +4,7 @@ from subprocess import call
 from os import path
 import numpy as np
 
-system = 'ki-ls'#'sherlock'
+system = 'sherlock'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
     #outputdir = '/u/ki/swmclau2/des/TestData/'
@@ -48,12 +48,14 @@ def make_sherlock_command(jobname, params):
 
     sbatch_header = ['#!/bin/bash',
                '--job-name=%s'%jobname,
+               '-p iric', #KIPAC queu
                '--output=%s'%path.join(outputdir, logfile),
                '--error=%s'%path.join(outputdir, errfile),
-               '--time=%d:00'%TIME,
+               '--time=%d:00'%(TIME*60),
                '--qos=normal',
                '--nodes=%d'%1,
-               '--exclusive',
+               #'--exclusive',
+               '--mem-per-cpu=32000',
                '--ntasks-per-node=%d'%1,
                '--cpus-per-task=%d'%16]
 
@@ -84,4 +86,7 @@ if __name__ == "__main__":
                 params = {'f_c':f_c, 'alpha':alpha, 'logM1':logM1}
 
                 command = make_command(jobname, params)
-                call(command)
+                call(command, shell = True)
+                break
+            break
+        break
