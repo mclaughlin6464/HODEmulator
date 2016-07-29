@@ -4,7 +4,8 @@ from subprocess import call
 from os import path
 import numpy as np
 
-system = 'sherlock'
+#system = 'sherlock'
+system='ki-ls'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
     #outputdir = '/u/ki/swmclau2/des/TestData/'
@@ -14,13 +15,13 @@ elif system == 'sherlock':
 
 QUEUE = 'bulletmpi'
 N_PER_DIM = 4
-TIME = 2 #hours
+TIME = 24 #hours
 
 BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
           'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
 
 
-def make_kils_command(jobname, params, queue='bulletmpi'):
+def make_kils_command(jobname, params, queue=QUEUE):
     logfile = jobname + '.out'
     command = ['bsub',
                '-q', queue,
@@ -81,12 +82,9 @@ if __name__ == "__main__":
     for f_c in np.linspace(BOUNDS['f_c'][0], BOUNDS['f_c'][1], num=N_PER_DIM):
         for alpha in np.linspace(BOUNDS['alpha'][0], BOUNDS['alpha'][1], num=N_PER_DIM):
             for logM1 in np.linspace(BOUNDS['logM1'][0], BOUNDS['logM1'][1], num=N_PER_DIM):
-                jobname = 'Emulator_fc_%.2f_a_%.2f_M1_%.2f' % (f_c, alpha, logM1)
+                jobname = 'Emulator_fc_%.2f_a_%.2f_M1_%.2f' % (f_c, alpha, logM1)# + '_test'
                 print jobname
                 params = {'f_c':f_c, 'alpha':alpha, 'logM1':logM1}
 
                 command = make_command(jobname, params)
-                call(command, shell = True)
-                break
-            break
-        break
+                call(command, shell = system=='sherlock')

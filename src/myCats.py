@@ -13,7 +13,7 @@ __all__ = ['Bolshoi', 'Multidark', 'Emu', 'Fox', 'MDHR', 'Chinchilla', 'Aardvark
 
 hostname = gethostname()
 KILS = hostname[:-2] == 'ki-ls'
-KILS = False # TODO
+KILS = True # TODO
 SF_TOLERANCE = 0.05
 
 # set filepaths depending on which cluster we're on.

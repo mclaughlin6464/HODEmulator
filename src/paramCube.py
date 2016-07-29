@@ -124,7 +124,7 @@ def testCube(outputdir, fixed_params={}, n_per_dim=4):
 
         #I could maybe do something more interesting than rands.
 
-        data = np.stack( (RBINS[1:] + RBINS[:-1]) / 2, np.random.rand(len(RBINS)-1) )
+        data = np.stack( [(RBINS[1:] + RBINS[:-1]) / 2, np.random.rand(len(RBINS)-1)] )
         #cov = np.random.rand((len(RBINS), len(RBINS))) #could just do an eye matrix too.
         cov = np.eye((len(RBINS)-1))*np.random.rand()
 
@@ -133,7 +133,7 @@ def testCube(outputdir, fixed_params={}, n_per_dim=4):
         header = '\n'.join(header_start)
         np.savetxt(ob + '_corr_test_%.3f.npy' % (scale_factor), data,
                 header = header)
-        np.savetxt(outbase + '_cov_test_%.3f.npy' % (scale_factor), cov,
+        np.savetxt(ob + '_cov_test_%.3f.npy' % (scale_factor), cov,
                 header = header)
 
 if __name__ == '__main__':

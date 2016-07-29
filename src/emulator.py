@@ -37,7 +37,7 @@ def file_reader(corr_file, cov_file):
     return params, r, xi, cov
 
 
-def get_training_data(fixed_params={}):
+def get_training_data(fixed_params={}, directory=DIRECTORY):
     '''load the GP's x,y, and yerr from the output of paramCube'''
     corr_files = sorted(glob(path.join(DIRECTORY, '*corr*.npy')))
     cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
@@ -84,11 +84,11 @@ def get_training_data(fixed_params={}):
     return x[zeros_slice], y[zeros_slice], yerr[zeros_slice]
 
 
-def build_emulator(fixed_params={}):
+def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
     ndim = len(PARAMS) - len(fixed_params)
 
-    x, xi, xi_err = get_training_data(fixed_params)
+    x, xi, xi_err = get_training_data(fixed_params,directory)
 
     metric = (1.0 for i in xrange(ndim))  # could make better guesses:
     a = 1e5
