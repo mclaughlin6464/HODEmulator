@@ -65,7 +65,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         # doing some shuffling and stacking
         file_params = []
         for p in PARAMS:
-            if p not in varied_params:
+            if p in fixed_params:
                 continue
             file_params.append(np.ones((NBINS,)) * params[p])
 
@@ -86,7 +86,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
 def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
-    ndim = len(PARAMS) - len(fixed_params)
+    ndim = len(PARAMS) - len(fixed_params) +1 #include r
 
     x, xi, xi_err = get_training_data(fixed_params,directory)
 
@@ -100,7 +100,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
         # Update the kernel parameters and compute the likelihood.
         # params are log(a) and log(m)
         gp.kernel[:] = p
-        ll = gp.lnlikelihood(y, quiet=True)
+        ll = gp.lnlikelihood(xi, quiet=True)
 
         # The scipy optimizer doesn't play well with infinities.
         return -ll if np.isfinite(ll) else 1e25
@@ -109,14 +109,14 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     def grad_nll(p):
         # Update the kernel parameters and compute the likelihood.
         gp.kernel[:] = p
-        return -gp.grad_lnlikelihood(y, quiet=True)
+        return -gp.grad_lnlikelihood(xi, quiet=True)
 
     p0 = gp.kernel.vector
     results = op.minimize(nll, p0, jac=grad_nll)
 
     if not results.success:
-        print 'WARNING: GP Optimization failed!'
-        # TODO a real warning
+        import warnings
+        warnings.warn('WARNING: GP Optimization failed!')
 
     gp.kernel[:] = results.x
 
@@ -125,6 +125,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
+#TODO clarity of log_xi, xi
 def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None):
     # check that all params have been accounted for!
     # could wrap this in a try block to make it more informative
@@ -132,7 +133,7 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
     if y_param is not None:
         input_params.add(y_param)
     assert len(input_params) == gp._x.shape[1]  # check dimenstionality
-    assert all([i in PARAMS for i in input_params])
+    assert all([i in PARAMS or i == 'r' for i in input_params])
     # used to have a param check but forgot about the whole dropping params thing.
 
     assert all(y is None for y in [y_param, y_points]) or all(y is not None for y in [y_param, y_points])
@@ -147,16 +148,23 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
                 t_list.append(x_points)
             else:
                 continue
+        #adding 'r' in as a special case
+        if 'r' in fixed_params:
+            t_list.append(np.ones_like(x_points)*fixed_params['r'])
+        elif 'r'==x_param:
+            t_list.append(x_points)
+
         t = np.stack(t_list)
 
         # TODO mean subtraction?
         mu, cov = gp.predict(xi, t)
 
         # TODO return std or cov?
-        return mu, np.sqrt(np.diag(cov))
+        return mu, np.diag(cov)
     else:
         output = []
-        #TODO make sure y_points is sensible!
+        assert len(y_points) <= 20 #y_points has a limit, otherwise this'd be crazy
+
         for y in y_points: # I thought this had a little too mcuh copying, but
             #this is the best wayt ensure the ordering is consistent.
             t_list = []
@@ -170,8 +178,20 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
                 else:
                     continue
 
+            if 'r' in fixed_params:
+                t_list.append(np.ones_like(x_points) * fixed_params['r'])
+            elif 'r' == x_param:
+                t_list.append(x_points)
+            elif 'r' == y_param:
+                t_list.append(np.ones_like(x_points) * y)
+
             t = np.stack(t_list)
 
             mu, cov = gp.predict(xi, t)
             output.append((mu, np.sqrt(np.diag(cov))))
         return output
+
+def emulate_wrt_r(gp,xi,fixed_params, rbins):
+    '''simplified version of the above that implements the most common case, 1-D emulation in r'''
+    assert 'r' not in fixed_params
+    return emulate(gp, xi, fixed_params, x_param='r', x_points=np.log10((rbins[1:]+rbins[:-1])/2))
