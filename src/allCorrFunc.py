@@ -11,13 +11,15 @@ from halotools.empirical_models import HodModelFactory, TrivialPhaseSpace, NFWPh
 from halotools.empirical_models import Zheng07Cens, Zheng07Sats
 from halotools.sim_manager import CachedHaloCatalog
 from halotools.mock_observables import return_xyz_formatted_array, tpcf, tpcf_jackknife, tpcf_one_two_halo_decomp, wp
-
+'''
 try:
     CORRFUNC = True
     from Corrfunc._countpairs import countpairs_xi
 
 except ImportError:
     CORRFUNC = False
+'''
+CORRFUNC = False
 
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
@@ -33,7 +35,7 @@ SF_TOLERANCE = 0.05  # tolerance within a passed in scale factor we'll use.
 
 
 # TODO change name so as to not overlap with CorrFunc
-def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jackknife=False, min_ptcl=MIN_PTCL,
+def corrFunc(simname, scale_factor, outputdir, HOD='redMagic', params={}, do_jackknife=True, min_ptcl=MIN_PTCL,
              rbins=RBINS, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
 

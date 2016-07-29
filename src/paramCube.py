@@ -9,8 +9,8 @@ import argparse
 from myCats import cat_dict
 from allCorrFunc import loadHaloAndModel, popAndCorr, RBINS,  MIN_PTCL
 from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to ahve ti there.
-# Given by Elisabeth from on high
-
+from guppy import hpy
+h = hpy()
 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.
@@ -62,6 +62,8 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=4):
 
 def calc_galaxy_autocorr(simname, scale_factor, outbase, params={},do_jackknife=True, **kwargs):
     'Calculate the cross correlation for a single catalog at a single scale factor'
+    print h.heap()
+    print '--'*25 
     t0 = time()
 
     cat = cat_dict[simname](**kwargs)

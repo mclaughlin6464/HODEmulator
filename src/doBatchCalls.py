@@ -4,15 +4,17 @@ from subprocess import call
 from os import path
 import numpy as np
 
-system = 'ki-ls'#'sherlock'
+system = 'sherlock'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
+    #outputdir = '/u/ki/swmclau2/des/TestData/'
+
 elif system == 'sherlock':
     outputdir = '/home/swmclau2/scratch/EmulatorData/'
 
 QUEUE = 'bulletmpi'
 N_PER_DIM = 4
-TIME = 6 #hours
+TIME = 2 #hours
 
 BOUNDS = {'logMmin': (11.7, 12.5), 'sigma_logM': (0.2, 0.7), 'logM0': (10, 13), 'logM1': (13.1, 14.3),
           'alpha': (0.75, 1.25), 'f_c': (0.1, 0.5)}
@@ -30,6 +32,7 @@ def make_kils_command(jobname, params, queue='bulletmpi'):
                outputdir]
 
     param_list = []
+    #param_list.append('--test')
     for param, val in params.iteritems():
         param_list.append('--%s' % param)
         param_list.append(str(val))
@@ -45,12 +48,14 @@ def make_sherlock_command(jobname, params):
 
     sbatch_header = ['#!/bin/bash',
                '--job-name=%s'%jobname,
+               '-p iric', #KIPAC queu
                '--output=%s'%path.join(outputdir, logfile),
                '--error=%s'%path.join(outputdir, errfile),
-               '--time=%d:00'%TIME,
+               '--time=%d:00'%(TIME*60),
                '--qos=normal',
                '--nodes=%d'%1,
-               '--exclusive',
+               #'--exclusive',
+               '--mem-per-cpu=32000',
                '--ntasks-per-node=%d'%1,
                '--cpus-per-task=%d'%16]
 
@@ -81,4 +86,7 @@ if __name__ == "__main__":
                 params = {'f_c':f_c, 'alpha':alpha, 'logM1':logM1}
 
                 command = make_command(jobname, params)
-                call(command)
+                call(command, shell = True)
+                break
+            break
+        break
