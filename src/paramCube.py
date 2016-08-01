@@ -53,6 +53,11 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=4):
 
     # now, send each fo these to my code.
     for p, out in izip(points, outbase):
+        #check if the file already exists
+        if path.isfile(path.join(outputdir,out+'_corr_%.3f.npy'%(1/(1+REDSHIFT)) )):
+            continue #file already exists!
+            print 'Skipping %s'%out
+
         calc_galaxy_autocorr(SIMNAME, 1 / (1 + REDSHIFT), path.join(outputdir, out),
                              params=p,do_jackknife=True, Lbox=400, npart=2048)
 
@@ -148,6 +153,8 @@ if __name__ == '__main__':
         parser.add_argument(''.join(['--', param])) #no help scripts #YOLO
 
     args = vars(parser.parse_args())
+    #test = args['test']
+    #del args['test']
 
     outputdir = args['outputdir']
     del args['outputdir']

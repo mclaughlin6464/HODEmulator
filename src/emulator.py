@@ -12,7 +12,7 @@ from george.kernels import *
 from allCorrFunc import RBINS
 
 DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
-NBINS = len(RBINS)
+NBINS = len(RBINS) -1
 # In general, the params don't need to be ordered
 # However, at this final step consistancy is necessary.
 # This list defines that order.
@@ -45,7 +45,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     varied_params = set(PARAMS) - set(fixed_params.keys())
 
-    ndim = len(varied_params)
+    ndim = len(varied_params) +1 #lest we forget r
 
     x = np.zeros((npoints, ndim))
     y = np.zeros((npoints,))
@@ -57,6 +57,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         # skip values that aren't where we've fixed them to be.
         # It'd be nice to do this before the file I/O. Not possible without putting all info in the filename.
         # or, a more nuanced file structure
+        #TODO check if a fixed_param is not one of the options
         if any(params[key] != val for key, val in fixed_params.iteritems()):
             continue
 
@@ -86,14 +87,18 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
 def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
+
     ndim = len(PARAMS) - len(fixed_params) +1 #include r
-
     x, xi, xi_err = get_training_data(fixed_params,directory)
+    print x.shape 
 
-    metric = (1.0 for i in xrange(ndim))  # could make better guesses:
+    metric = [1.0 for i in xrange(ndim)]  # could make better guesses:
     a = 1e5
-    kernel = a * ExpSquaredKernel(metric, ndim=2)
+    kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     gp = george.GP(kernel)
+    #In the test module some of the errors are NaNs
+    #TODO remove this in the main implementation
+    xi_err[np.isnan(xi_err)] = 1.0
     gp.compute(x, xi_err)
 
     def nll(p):
@@ -126,6 +131,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
 #TODO clarity of log_xi, xi
+#TODO fixed params is different than the above; clarify
 def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None):
     # check that all params have been accounted for!
     # could wrap this in a try block to make it more informative
@@ -154,9 +160,10 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
         elif 'r'==x_param:
             t_list.append(x_points)
 
-        t = np.stack(t_list)
+        t = np.stack(t_list).T
 
         # TODO mean subtraction?
+        print xi.shape, t.shape, gp._x.shape
         mu, cov = gp.predict(xi, t)
 
         # TODO return std or cov?
