@@ -54,24 +54,28 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     warned = False
     num_skipped = 0
+    num_used = 0
     for idx, (corr_file, cov_file) in enumerate(izip(corr_files, cov_files)):
         params, r, xi, cov = file_reader(corr_file, cov_file)
 
         # skip values that aren't where we've fixed them to be.
         # It'd be nice to do this before the file I/O. Not possible without putting all info in the filename.
         # or, a more nuanced file structure
+        #TODO check if a fixed_param is not one of the options
+        if any(params[key] != val for key, val in fixed_params.iteritems()):
+            continue
+
         if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
             if not warned:
                 warnings.warn('WARNING: NaN detected. Skipping point in %s'%cov_file)
                 warned = True
             num_skipped+=1
             continue
-
-        #TODO check if a fixed_param is not one of the options
-        if any(params[key] != val for key, val in fixed_params.iteritems()):
-            continue
+        
 
         assert NBINS == len(r)#at least it'll throw an error if there's an issue.
+
+        num_used+=1
 
         # doing some shuffling and stacking
         file_params = []
@@ -87,10 +91,12 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         # Approximately true, may need to revisit
         yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
 
+    print '\nSkipped %.2f %% of points due to NaNs.'%(100.0*(num_skipped)/(num_used+num_skipped))
+    #TODO warning is len==0
+
     # remove rows that were skipped due to the fixed thing
     # NOTE: HACK
     # a reshape may be faster.
-    print 'Skipped %d points due to NaNs.'%num_skipped
     zeros_slice = np.all(x != 0.0, axis=1)
 
     return x[zeros_slice], y[zeros_slice], yerr[zeros_slice]
@@ -215,13 +221,17 @@ def emulate_wrt_r(gp,xi,fixed_params, rbins):
     return emulate(gp, xi, fixed_params, x_param='r', x_points=np.log10((rbins[1:]+rbins[:-1])/2))
 
 if __name__ == '__main__':
+    from time import time
 
-    emulation_point = [('f_c',0.1),('logMmin',12.5), ('logM0',13.0), ('sigma_logM',0.7), ('alpha',0.75),('logM1',13.5)]
-    i=3 #could have this as an input i suppose.
+    emulation_point = [('f_c',0.233),('logMmin',12.5), ('logM0',13.0), ('sigma_logM',0.7), ('alpha',0.75),('logM1',13.5)]
+    i=1 #could have this as an input i suppose.
     fixed_params = {key:val for key,val in emulation_point[:i]}
+    t0 = time()
     gp,xi = build_emulator(fixed_params)
+    print 'Build time: %.2f seconds'%(time()-t0)
 
     em_params = {key:val for key,val in emulation_point[i:]}
     mu, err = emulate_wrt_r(gp,xi,em_params, RBINS)
-    print mu
+    print 'Total time: %.2f seconds'%(time()-t0) 
+    print 10**mu
 
