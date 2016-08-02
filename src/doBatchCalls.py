@@ -4,8 +4,9 @@ from subprocess import call
 from os import path
 import numpy as np
 
-#system = 'sherlock'
-system='ki-ls'
+#TODO these should be read from a config file, not hardcoded in.
+#Same with a few other similar places in the code
+system = 'ki-ls'#'sherlock'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorData/'
     #outputdir = '/u/ki/swmclau2/des/TestData/'
