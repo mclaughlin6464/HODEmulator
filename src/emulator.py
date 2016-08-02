@@ -7,6 +7,7 @@ import warnings
 from glob import glob
 import numpy as np
 import scipy.optimize as op
+from scipy.linalg import block_diag
 import george
 from george.kernels import *
 
@@ -50,7 +51,8 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     x = np.zeros((npoints, ndim))
     y = np.zeros((npoints,))
-    yerr = np.zeros((npoints,))
+    #yerr = np.zeros((npoints,))
+    ycovs = []
 
     warned = False
     num_skipped = 0
@@ -85,7 +87,10 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         x[idx * NBINS:(idx + 1) * NBINS, :] = np.stack(file_params).T
         y[idx * NBINS:(idx + 1) * NBINS] = np.log10(xi)
         # Approximately true, may need to revisit
-        yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+        #yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+        ycovs.append(np.sqrt(cov/(np.outer(xi,xi)) )/np.log(10)) #I think this is right, extrapolating from the above.
+
+    ycov = block_diag(ycovs)
 
     # remove rows that were skipped due to the fixed thing
     # NOTE: HACK
@@ -93,14 +98,14 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
     print 'Skipped %d points due to NaNs.'%num_skipped
     zeros_slice = np.all(x != 0.0, axis=1)
 
-    return x[zeros_slice], y[zeros_slice], yerr[zeros_slice]
+    return x[zeros_slice], y[zeros_slice], ycov[zeros_slice, :][:, zeros_slice]
 
 
 def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
 
     ndim = len(PARAMS) - len(fixed_params) +1 #include r
-    x, xi, xi_err = get_training_data(fixed_params,directory)
+    x, xi, xi_cov = get_training_data(fixed_params,directory)
     print x.shape 
 
     metric = [1.0 for i in xrange(ndim)]  # could make better guesses:
@@ -109,8 +114,9 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     gp = george.GP(kernel)
     #In the test module some of the errors are NaNs
     #TODO remove this in the main implementation
-    xi_err[np.isnan(xi_err)] = 1.0
-    gp.compute(x, xi_err)
+    #xi_err[np.isnan(xi_err)] = 1.0
+    gp.compute(x, xi_cov)#NOTE I'm using a modified version of george!
+    #Should put that in a doc somewhere
 
     def nll(p):
         # Update the kernel parameters and compute the likelihood.
