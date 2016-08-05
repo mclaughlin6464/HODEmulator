@@ -119,7 +119,7 @@ def loadHaloAndModel(cat, HOD, scale_factor):
     return halocat, model
 
 
-def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, min_ptcl=MIN_PTCL, rbins=RBINS):
+def popAndCorr(halocat, model, cat, params={}, do_jackknife=True, min_ptcl=MIN_PTCL, rbins=RBINS):
     '''Populate a halocat with a model and calculate the tpcf, tpcf_1h, tpcf_2h, and projected corr fun'''
     print 'Min Num Particles: %d\t%d bins' % (min_ptcl, len(rbins))
     model.param_dict.update(params)  # insert new params into model
@@ -137,7 +137,7 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=False, min_ptcl=MIN_
     # TODO N procs
     if do_jackknife:
         Nrands = 5
-        Nsub = 5
+        Nsub = 6
         randoms = np.random.random(
             (pos.shape[0] * Nrands, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
         xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,

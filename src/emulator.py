@@ -7,13 +7,14 @@ import warnings
 from glob import glob
 import numpy as np
 import scipy.optimize as op
+from scipy.linalg import block_diag
 import george
 from george.kernels import *
 
 from allCorrFunc import RBINS
 
 DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
-NBINS = len(RBINS) -1
+NBINS = len(RBINS) - 1
 # In general, the params don't need to be ordered
 # However, at this final step consistancy is necessary.
 # This list defines that order.
@@ -46,11 +47,12 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     varied_params = set(PARAMS) - set(fixed_params.keys())
 
-    ndim = len(varied_params) +1 #lest we forget r
+    ndim = len(varied_params) + 1  # lest we forget r
 
     x = np.zeros((npoints, ndim))
     y = np.zeros((npoints,))
-    yerr = np.zeros((npoints,))
+    # yerr = np.zeros((npoints,))
+    ycovs = []
 
     warned = False
     num_skipped = 0
@@ -67,18 +69,17 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
         if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
             if not warned:
-                warnings.warn('WARNING: NaN detected. Skipping point in %s'%cov_file)
+                warnings.warn('WARNING: NaN detected. Skipping point in %s' % cov_file)
                 warned = True
-            num_skipped+=1
+            num_skipped += 1
             continue
-        
-
-        assert NBINS == len(r)#at least it'll throw an error if there's an issue.
+        assert NBINS == len(r)  # at least it'll throw an error if there's an issue.
 
         num_used+=1
 
         # doing some shuffling and stacking
         file_params = []
+        #NOTE could do a param ordering here
         for p in PARAMS:
             if p in fixed_params:
                 continue
@@ -89,9 +90,18 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         x[idx * NBINS:(idx + 1) * NBINS, :] = np.stack(file_params).T
         y[idx * NBINS:(idx + 1) * NBINS] = np.log10(xi)
         # Approximately true, may need to revisit
-        yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+        # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+        ycovs.append(
+            cov / (np.outer(xi, xi)*np.log(10)**2))  # I think this is right, extrapolating from the above.
 
-    print '\nSkipped %.2f %% of points due to NaNs.'%(100.0*(num_skipped)/(num_used+num_skipped))
+    ycov = block_diag(*ycovs)
+    #ycov = np.sqrt(np.diag(ycov))
+    if num_used==0:
+        raise RuntimeError('One of your parameters wasn\'t exact!')
+    else:
+        print '%d Points used for training.'%num_used
+
+    #print '\nSkipped %.2f %% of points due to NaNs.'%(100.0*(num_skipped)/(num_used+num_skipped))
     #TODO warning is len==0
 
     # remove rows that were skipped due to the fixed thing
@@ -99,24 +109,26 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
     # a reshape may be faster.
     zeros_slice = np.all(x != 0.0, axis=1)
 
-    return x[zeros_slice], y[zeros_slice], yerr[zeros_slice]
+    return x[zeros_slice], y[zeros_slice], ycov
 
 
 def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
 
-    ndim = len(PARAMS) - len(fixed_params) +1 #include r
-    x, xi, xi_err = get_training_data(fixed_params,directory)
-    print x.shape 
+    ndim = len(PARAMS) - len(fixed_params) + 1  # include r
+    x, xi, xi_cov = get_training_data(fixed_params, directory)
 
-    metric = [1.0 for i in xrange(ndim)]  # could make better guesses:
+    metric = [0.1 for i in xrange(ndim)]  # could make better guesses:
     a = 1e5
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     gp = george.GP(kernel)
-    #In the test module some of the errors are NaNs
-    #TODO remove this in the main implementation
-    xi_err[np.isnan(xi_err)] = 1.0
-    gp.compute(x, xi_err)
+
+    # In the test module some of the errors are NaNs
+    # TODO remove this in the main implementation
+    # xi_err[np.isnan(xi_err)] = 1.0
+    gp.compute(x, np.sqrt(np.diag(xi_cov)))  # NOTE I'm using a modified version of george!
+
+    # Should put that in a doc somewhere
 
     def nll(p):
         # Update the kernel parameters and compute the likelihood.
@@ -137,17 +149,18 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     results = op.minimize(nll, p0, jac=grad_nll)
 
     if not results.success:
-       warnings.warn('WARNING: GP Optimization failed!')
+        warnings.warn('WARNING: GP Optimization failed!')
 
     gp.kernel[:] = results.x
+    print 'GP Params: ', np.exp(results.x)
 
-    return gp, xi
+    return gp, xi, xi_cov
 
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
-#TODO clarity of log_xi, xi
-#TODO fixed params is different than the above; clarify
+# TODO clarity of log_xi, xi
+# TODO fixed params is different than the above; clarify
 def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None):
     # check that all params have been accounted for!
     # could wrap this in a try block to make it more informative
@@ -170,16 +183,15 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
                 t_list.append(x_points)
             else:
                 continue
-        #adding 'r' in as a special case
+        # adding 'r' in as a special case
         if 'r' in fixed_params:
-            t_list.append(np.ones_like(x_points)*fixed_params['r'])
-        elif 'r'==x_param:
+            t_list.append(np.ones_like(x_points) * fixed_params['r'])
+        elif 'r' == x_param:
             t_list.append(x_points)
 
         t = np.stack(t_list).T
 
         # TODO mean subtraction?
-        print xi.shape, t.shape, gp._x.shape
         mu, cov = gp.predict(xi, t)
 
         # TODO return std or cov?
@@ -187,10 +199,11 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
         return mu, np.diag(cov)
     else:
         output = []
-        assert len(y_points) <= 20 #y_points has a limit, otherwise this'd be crazy
+        assert len(y_points) <= 20  # y_points has a limit, otherwise this'd be crazy
 
-        for y in y_points: # I thought this had a little too mcuh copying, but
-            #this is the best wayt ensure the ordering is consistent.
+
+        for y in y_points:  # I thought this had a little too mcuh copying, but
+            # this is the best wayt ensure the ordering is consistent.
             t_list = []
             for p in PARAMS:
                 if p in fixed_params:
@@ -198,7 +211,7 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
                 elif p == x_param:
                     t_list.append(x_points)
                 elif p == y_param:
-                    t_list.append(np.ones_like(x_points)*y)
+                    t_list.append(np.ones_like(x_points) * y)
                 else:
                     continue
 
@@ -209,29 +222,32 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
             elif 'r' == y_param:
                 t_list.append(np.ones_like(x_points) * y)
 
-            t = np.stack(t_list)
+            t = np.stack(t_list).T
 
             mu, cov = gp.predict(xi, t)
             output.append((mu, np.sqrt(np.diag(cov))))
         return output
 
-def emulate_wrt_r(gp,xi,fixed_params, rbins):
+
+def emulate_wrt_r(gp, xi, fixed_params, rpoints, y_param=None, y_points=None):
     '''simplified version of the above that implements the most common case, 1-D emulation in r'''
     assert 'r' not in fixed_params
-    return emulate(gp, xi, fixed_params, x_param='r', x_points=np.log10((rbins[1:]+rbins[:-1])/2))
+    return emulate(gp,xi,fixed_params, x_param='r', x_points=rpoints,
+                    y_param=y_param,y_points=y_points)
 
 if __name__ == '__main__':
     from time import time
 
     emulation_point = [('f_c',0.233),('logMmin',12.5), ('logM0',13.0), ('sigma_logM',0.7), ('alpha',0.75),('logM1',13.5)]
-    i=1 #could have this as an input i suppose.
+    i=3 #could have this as an input i suppose.
     fixed_params = {key:val for key,val in emulation_point[:i]}
     t0 = time()
-    gp,xi = build_emulator(fixed_params)
+    gp,xi,xi_cov = build_emulator(fixed_params)
     print 'Build time: %.2f seconds'%(time()-t0)
 
     em_params = {key:val for key,val in emulation_point[i:]}
     mu, err = emulate_wrt_r(gp,xi,em_params, RBINS)
     print 'Total time: %.2f seconds'%(time()-t0) 
     print 10**mu
+
 
