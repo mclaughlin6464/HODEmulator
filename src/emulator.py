@@ -19,6 +19,11 @@ NBINS = len(RBINS) - 1
 # However, at this final step consistancy is necessary.
 # This list defines that order.
 PARAMS = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha', 'f_c']
+#The optimization struggles in higher dimensions
+#These are values gleaned from lower dims, good guesses.
+INITIAL_GUESSES = {'amp': 0.481, 'logMmin':0.1349,'sigma_logM':0.089,
+                   'logM0': 2.0, 'logM1':0.204, 'alpha':0.039,
+                   'f_c':0.041, 'r':0.040}
 
 
 def file_reader(corr_file, cov_file):
@@ -73,6 +78,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
                 warned = True
             num_skipped += 1
             continue
+
         assert NBINS == len(r)  # at least it'll throw an error if there's an issue.
 
         num_used+=1
@@ -111,15 +117,73 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     return x[zeros_slice], y[zeros_slice], ycov
 
+def get_plot_data(em_params,fixed_params, directory=DIRECTORY):
+    '''Load truths from the output of paramCube for plotting alongside the GP emulations.'''
+
+    assert len(em_params)+len(fixed_params) +1 == len(PARAMS)
+
+    corr_files = sorted(glob(path.join(DIRECTORY, '*corr*.npy')))
+    cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
+    npoints = len(corr_files)# each file contains NBINS points in r, and each file is a 6-d point
+
+    log_r = np.zeros((npoints,NBINS ))
+    log_xi = np.zeros((npoints,NBINS))
+    log_xi_err = np.zeros((npoints,NBINS))
+
+    warned = False
+    num_skipped = 0
+    num_used = 0
+    for idx, (corr_file, cov_file) in enumerate(izip(corr_files, cov_files)):
+        params, r, xi, cov = file_reader(corr_file, cov_file)
+
+        # skip values that aren't where we've fixed them to be.
+        # It'd be nice to do this before the file I/O. Not possible without putting all info in the filename.
+        # or, a more nuanced file structure
+        #TODO check if a fixed_param is not one of the options
+        if any(params[key] != val for key, val in fixed_params.iteritems()):
+            continue
+
+        if any(params[key] != val for key, val in em_params.iteritems()):
+            continue
+
+        if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
+            if not warned:
+                warnings.warn('WARNING: NaN detected. Skipping point in %s' % cov_file)
+                warned = True
+            num_skipped += 1
+            continue
+
+        assert NBINS == len(r)  # at least it'll throw an error if there's an issue.
+
+        num_used+=1
+
+        log_r[idx] = np.log10(r) 
+        log_xi[idx] = np.log10(xi)
+        # Approximately true, may need to revisit
+        # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+        log_xi_err[idx] = np.sqrt(np.diag(cov))/(xi*np.log(10))  # I think this is right, extrapolating from the above.
+
+    # remove rows that were skipped due to the fixed thing
+    # NOTE: HACK
+    # a reshape may be faster.
+    zeros_slice = np.all(log_xi != 0.0, axis=1)
+
+    return log_r[zeros_slice], log_xi[zeros_slice], log_xi_err[zeros_slice] 
 
 def build_emulator(fixed_params={}, directory=DIRECTORY):
     '''Actually build the emulator. '''
 
     ndim = len(PARAMS) - len(fixed_params) + 1  # include r
     x, xi, xi_cov = get_training_data(fixed_params, directory)
+    
+    metric = []
+    for p in PARAMS:
+        if p not in fixed_params:
+            metric.append(INITIAL_GUESSES[p])
 
-    metric = [0.1 for i in xrange(ndim)]  # could make better guesses:
-    a = 1e5
+    metric.append(INITIAL_GUESSES['r'])
+
+    a = INITIAL_GUESSES['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     gp = george.GP(kernel)
 
@@ -127,6 +191,8 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     # TODO remove this in the main implementation
     # xi_err[np.isnan(xi_err)] = 1.0
     gp.compute(x, np.sqrt(np.diag(xi_cov)))  # NOTE I'm using a modified version of george!
+
+    print 'Initial Params: ', np.exp(gp.kernel[:])
 
     # Should put that in a doc somewhere
 
@@ -146,10 +212,11 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
         return -gp.grad_lnlikelihood(xi, quiet=True)
 
     p0 = gp.kernel.vector
-    results = op.minimize(nll, p0, jac=grad_nll)
+    results = op.minimize(nll, p0, jac=grad_nll, method='Newton-CG')
 
     if not results.success:
         warnings.warn('WARNING: GP Optimization failed!')
+        print 'GP Optimization Failed.'
 
     gp.kernel[:] = results.x
     print 'GP Params: ', np.exp(results.x)

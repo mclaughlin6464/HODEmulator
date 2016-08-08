@@ -136,8 +136,8 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=True, min_ptcl=MIN_P
 
     # TODO N procs
     if do_jackknife:
-        Nrands = 5
-        Nsub = 6
+        Nrands = 10 
+        Nsub = 10 
         randoms = np.random.random(
             (pos.shape[0] * Nrands, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
         xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,
