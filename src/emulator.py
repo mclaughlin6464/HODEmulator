@@ -305,16 +305,63 @@ def emulate_wrt_r(gp, xi, fixed_params, rpoints, y_param=None, y_points=None):
 if __name__ == '__main__':
     from time import time
 
-    emulation_point = [('f_c',0.233),('logMmin',12.5), ('logM0',13.0), ('sigma_logM',0.7), ('alpha',0.75),('logM1',13.5)]
-    i=3 #could have this as an input i suppose.
-    fixed_params = {key:val for key,val in emulation_point[:i]}
+    y_param = 'logMmin'
+    ep = ['sigma_logM', 'logM0', 'logM1', 'f_c', 'alpha']
+
+    emulation_point = [('f_c', 0.233),
+                       ('logM0', 12.0), ('sigma_logM', 0.533), ('alpha', 1.083),
+                       ('logM1', 13.5), ('logMmin', 12.233)]
+
+    fiducial_point = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02,
+                      'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
+    for i in xrange(5):
+        fixed_params = {key: val for key, val in emulation_point}
+
+        em_params = {}
+        _ep = ep[:]
+        skipped = _ep.pop(i)
+        print i, skipped
+
+        for param in _ep:
+            em_params[param] = fixed_params[param]
+            del fixed_params[param]
+
+        del fixed_params[y_param]
+
+        t0 = time()
+        gp,xi,xi_cov = build_emulator(fixed_params)
+        print 'Build time: %.2f seconds'%(time()-t0)
+
+        outputs = emulate_wrt_r(gp,xi,em_params, RBINS)
+        print 'Total time: %.2f seconds'%(time()-t0)
+
+        plot_outputs = get_plot_data(em_params, fixed_params)
+
+        output_dir = '/u/ki/swmclau2/des/EmulatorTest'
+        np.savetxt(path.join(output_dir, 'output_%d.npy'%i), outputs)
+        np.savetxt(path.join(output_dir, 'plot_output_%d.npy'%i), plot_outputs)
+        print '*-'*30
+
+    fixed_params = {key: val for key, val in emulation_point}
+
+    em_params = {}
+
+    for param in ep:
+        em_params[param] = fixed_params[param]
+        del fixed_params[param]
+
+    del fixed_params[y_param]
+
     t0 = time()
-    gp,xi,xi_cov = build_emulator(fixed_params)
-    print 'Build time: %.2f seconds'%(time()-t0)
+    gp, xi, xi_cov = build_emulator(fixed_params)
+    print 'Build time: %.2f seconds' % (time() - t0)
 
-    em_params = {key:val for key,val in emulation_point[i:]}
-    mu, err = emulate_wrt_r(gp,xi,em_params, RBINS)
-    print 'Total time: %.2f seconds'%(time()-t0) 
-    print 10**mu
+    outputs = emulate_wrt_r(gp, xi, em_params, RBINS)
+    print 'Total time: %.2f seconds' % (time() - t0)
 
+    plot_outputs = get_plot_data(em_params, fixed_params)
+
+    output_dir = '/u/ki/swmclau2/des/EmulatorTest'
+    np.savetxt(path.join(output_dir, 'output_all.npy' % i), outputs)
+    np.savetxt(path.join(output_dir, 'plot_output_all.npy' % i), plot_outputs)
 
