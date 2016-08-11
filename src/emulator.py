@@ -21,10 +21,21 @@ NBINS = len(RBINS) - 1
 PARAMS = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha', 'f_c']
 #The optimization struggles in higher dimensions
 #These are values gleaned from lower dims, good guesses.
-INITIAL_GUESSES = {'amp': 0.481, 'logMmin':0.1349,'sigma_logM':0.089,
-                   'logM0': 2.0, 'logM1':0.204, 'alpha':0.039,
-                   'f_c':0.041, 'r':0.040}
+#INITIAL_GUESSES = {'amp': 0.481, 'logMmin':0.1349,'sigma_logM':0.089,
+#                   'logM0': 2.0, 'logM1':0.204, 'alpha':0.039,
+#                   'f_c':0.041, 'r':0.040}
 
+INITIAL_GUESSES = {'amp':6, 'r':0.03}
+for p in PARAMS:
+    INITIAL_GUESSES[p] = 0.03
+
+#TODO Harcoding in bias for now, which is very lazy
+#I should load it in somewhere, presumably by cosmology in the future.
+xi_mm = np.array([1.447577e02,8.069545e01,4.991154e01,2.921271e01,
+         1.618499e01,8.596292e00,4.510719e00,2.434982e00,
+         1.389996e00,8.395150e-1,5.251286e-1,3.297156e-1,
+         2.020197e-1,1.181109e-1,6.463543e-2,3.244891e-2,
+         1.454078e-2,5.575480e-3])
 
 def file_reader(corr_file, cov_file):
     '''Data is stored in two formats. Numpy writes r and xi, and the comments hold what parameters they describe.
@@ -44,7 +55,7 @@ def file_reader(corr_file, cov_file):
     return params, r, xi, cov
 
 
-def get_training_data(fixed_params={}, directory=DIRECTORY):
+def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
     '''load the GP's x,y, and yerr from the output of paramCube'''
     corr_files = sorted(glob(path.join(DIRECTORY, '*corr*.npy')))
     cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
@@ -94,11 +105,15 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
         file_params.append(np.log10(r))
 
         x[idx * NBINS:(idx + 1) * NBINS, :] = np.stack(file_params).T
-        y[idx * NBINS:(idx + 1) * NBINS] = np.log10(xi)
+        if bias:
+            y[idx * NBINS:(idx + 1) * NBINS] = xi/xi_mm
+            ycovs.append(cov/np.outer(xi_mm, xi_mm))
+        else:
+            y[idx * NBINS:(idx + 1) * NBINS] = np.log10(xi)
         # Approximately true, may need to revisit
         # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
-        ycovs.append(
-            cov / (np.outer(xi, xi)*np.log(10)**2))  # I think this is right, extrapolating from the above.
+            ycovs.append(
+                cov / (np.outer(xi, xi)*np.log(10)**2))  # I think this is right, extrapolating from the above.
 
     ycov = block_diag(*ycovs)
     #ycov = np.sqrt(np.diag(ycov))
@@ -117,7 +132,7 @@ def get_training_data(fixed_params={}, directory=DIRECTORY):
 
     return x[zeros_slice], y[zeros_slice], ycov
 
-def get_plot_data(em_params,fixed_params, directory=DIRECTORY):
+def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
     '''Load truths from the output of paramCube for plotting alongside the GP emulations.'''
 
     assert len(em_params)+len(fixed_params) +1 == len(PARAMS)
@@ -127,8 +142,8 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY):
     npoints = len(corr_files)# each file contains NBINS points in r, and each file is a 6-d point
 
     log_r = np.zeros((npoints,NBINS ))
-    log_xi = np.zeros((npoints,NBINS))
-    log_xi_err = np.zeros((npoints,NBINS))
+    y = np.zeros((npoints,NBINS))
+    y_err = np.zeros((npoints,NBINS))
 
     warned = False
     num_skipped = 0
@@ -158,23 +173,31 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY):
         num_used+=1
 
         log_r[idx] = np.log10(r) 
-        log_xi[idx] = np.log10(xi)
-        # Approximately true, may need to revisit
-        # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
-        log_xi_err[idx] = np.sqrt(np.diag(cov))/(xi*np.log(10))  # I think this is right, extrapolating from the above.
+        if bias:
+            y[idx] = xi/xi_mm
+            y_err[idx] = np.sqrt(np.diag(cov))/(xi_mm)  # I think this is right, extrapolating from the above.
+        else:
+            y[idx] = np.log10(xi)
+            # Approximately true, may need to revisit
+            # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
+            y_err[idx] = np.sqrt(np.diag(cov))/(xi*np.log(10))  # I think this is right, extrapolating from the above.
+
 
     # remove rows that were skipped due to the fixed thing
     # NOTE: HACK
     # a reshape may be faster.
-    zeros_slice = np.all(log_xi != 0.0, axis=1)
+    zeros_slice = np.all(y != 0.0, axis=1)
 
-    return log_r[zeros_slice], log_xi[zeros_slice], log_xi_err[zeros_slice] 
+    return log_r[zeros_slice], y[zeros_slice], y_err[zeros_slice] 
 
-def build_emulator(fixed_params={}, directory=DIRECTORY):
+def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     '''Actually build the emulator. '''
 
     ndim = len(PARAMS) - len(fixed_params) + 1  # include r
-    x, xi, xi_cov = get_training_data(fixed_params, directory)
+    x, y, y_cov = get_training_data(fixed_params, directory, bias)
+
+    y_hat = y.mean()
+    y-=y_hat
     
     metric = []
     for p in PARAMS:
@@ -190,7 +213,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     # In the test module some of the errors are NaNs
     # TODO remove this in the main implementation
     # xi_err[np.isnan(xi_err)] = 1.0
-    gp.compute(x, np.sqrt(np.diag(xi_cov)))  # NOTE I'm using a modified version of george!
+    gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
 
     print 'Initial Params: ', np.exp(gp.kernel[:])
 
@@ -200,7 +223,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
         # Update the kernel parameters and compute the likelihood.
         # params are log(a) and log(m)
         gp.kernel[:] = p
-        ll = gp.lnlikelihood(xi, quiet=True)
+        ll = gp.lnlikelihood(y, quiet=True)
 
         # The scipy optimizer doesn't play well with infinities.
         return -ll if np.isfinite(ll) else 1e25
@@ -209,10 +232,10 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     def grad_nll(p):
         # Update the kernel parameters and compute the likelihood.
         gp.kernel[:] = p
-        return -gp.grad_lnlikelihood(xi, quiet=True)
+        return -gp.grad_lnlikelihood(y, quiet=True)
 
     p0 = gp.kernel.vector
-    results = op.minimize(nll, p0, jac=grad_nll, method='Newton-CG')
+    results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
 
     if not results.success:
         warnings.warn('WARNING: GP Optimization failed!')
@@ -221,18 +244,16 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     gp.kernel[:] = results.x
     print 'GP Params: ', np.exp(results.x)
 
-    return gp, xi, xi_cov
-
-
+    return gp, y+y_hat, y_cov
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
 # TODO clarity of log_xi, xi
 # TODO fixed params is different than the above; clarify
-def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None):
+def emulate(gp, em_y, em_params, x_param, x_points, y_param=None, y_points=None):
     # check that all params have been accounted for!
     # could wrap this in a try block to make it more informative
-    input_params = set(fixed_params) | set([x_param])
+    input_params = set(em_params) | set([x_param])
     if y_param is not None:
         input_params.add(y_param)
     assert len(input_params) == gp._x.shape[1]  # check dimenstionality
@@ -241,30 +262,33 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
 
     assert all(y is None for y in [y_param, y_points]) or all(y is not None for y in [y_param, y_points])
 
+    em_y_hat = em_y.mean()
+    em_y-=em_y_hat
+
     if y_param is None:
         # We only have to vary one parameter, as given by x_points
         t_list = []
         for p in PARAMS:
             if p in fixed_params:
-                t_list.append(np.ones_like(x_points) * fixed_params[p])
+                t_list.append(np.ones_like(x_points) * em_params[p])
             elif p == x_param:
                 t_list.append(x_points)
             else:
                 continue
         # adding 'r' in as a special case
-        if 'r' in fixed_params:
-            t_list.append(np.ones_like(x_points) * fixed_params['r'])
+        if 'r' in em_params:
+            t_list.append(np.ones_like(x_points) * em_params['r'])
         elif 'r' == x_param:
             t_list.append(x_points)
 
         t = np.stack(t_list).T
 
         # TODO mean subtraction?
-        mu, cov = gp.predict(xi, t)
+        mu, cov = gp.predict(em_y, t)
 
         # TODO return std or cov?
         # TODO return r's too? Just have those be passed in?
-        return mu, np.diag(cov)
+        return mu+em_y_hat, np.diag(cov)
     else:
         output = []
         assert len(y_points) <= 20  # y_points has a limit, otherwise this'd be crazy
@@ -274,8 +298,8 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
             # this is the best wayt ensure the ordering is consistent.
             t_list = []
             for p in PARAMS:
-                if p in fixed_params:
-                    t_list.append(np.ones_like(x_points) * fixed_params[p])
+                if p in em_params:
+                    t_list.append(np.ones_like(x_points) * em_params[p])
                 elif p == x_param:
                     t_list.append(x_points)
                 elif p == y_param:
@@ -283,8 +307,8 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
                 else:
                     continue
 
-            if 'r' in fixed_params:
-                t_list.append(np.ones_like(x_points) * fixed_params['r'])
+            if 'r' in em_params:
+                t_list.append(np.ones_like(x_points) * em_params['r'])
             elif 'r' == x_param:
                 t_list.append(x_points)
             elif 'r' == y_param:
@@ -292,15 +316,15 @@ def emulate(gp, xi, fixed_params, x_param, x_points, y_param=None, y_points=None
 
             t = np.stack(t_list).T
 
-            mu, cov = gp.predict(xi, t)
-            output.append((mu, np.sqrt(np.diag(cov))))
+            mu, cov = gp.predict(em_y, t)
+            output.append((mu+em_y_hat, np.sqrt(np.diag(cov))))
         return output
 
 
-def emulate_wrt_r(gp, xi, fixed_params, rpoints, y_param=None, y_points=None):
+def emulate_wrt_r(gp, em_y, em_params, rpoints, y_param=None, y_points=None):
     '''simplified version of the above that implements the most common case, 1-D emulation in r'''
-    assert 'r' not in fixed_params
-    return emulate(gp,xi,fixed_params, x_param='r', x_points=rpoints,
+    assert 'r' not in em_params
+    return emulate(gp,em_y,em_params, x_param='r', x_points=rpoints,
                     y_param=y_param,y_points=y_points)
 
 if __name__ == '__main__':
