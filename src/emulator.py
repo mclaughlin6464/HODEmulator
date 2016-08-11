@@ -224,6 +224,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY):
     return gp, xi, xi_cov
 
 
+
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
 # TODO clarity of log_xi, xi
