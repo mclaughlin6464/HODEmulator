@@ -227,9 +227,13 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     for p in gp.kernel:
         print '%.6f'%np.exp(p)
     print 
-    from time import time
 
-    # Should put that in a doc somewhere
+    return gp, y+y_hat, y_cov
+
+def train_emulator(gp, y):
+    '''Attempt to optimize the emulator!'''
+    y_hat = y.mean()
+    y -= y_hat
 
     def nll(p):
         t0 = time()
@@ -239,7 +243,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
         ll = gp.lnlikelihood(y, quiet=True)
 
         # The scipy optimizer doesn't play well with infinities.
-        print 'Nll: %.2f'%(time()-t0)
+        print 'Nll\t%f\t%.2f s'%(ll, time()-t0)
         return -ll if np.isfinite(ll) else 1e25
 
     # And the gradient of the objective function.
@@ -249,7 +253,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
         t0 = time()
         gp.kernel[:] = p
         output = -gp.grad_lnlikelihood(y, quiet=True)
-        print 'Grad Nll: %.2f'%(time()-t0)
+        print 'Grad Nll\t%f\t%.2f s'%(output.mean(), time()-t0)
         #return -gp.grad_lnlikelihood(y, quiet=True)
         return output
 
@@ -266,13 +270,12 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 
     gp.kernel[:] = results.x
     print 'GP Params: '
-
     for p in results.x:
         print '%.6f'%np.exp(p)
     print
     print 'Computed: %s'%gp.computed
-    gp.compute(x, np.sqrt(np.diag(y_cov)))
-    return gp, y+y_hat, y_cov
+    gp.recompute()
+    return #don't need to return anything!
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
@@ -388,6 +391,10 @@ if __name__ == '__main__':
         t0 = time()
         gp,xi,xi_cov = build_emulator(fixed_params)
         print 'Build time: %.2f seconds'%(time()-t0)
+
+        t0 = time()
+        train_emulator(gp, xi)
+        print 'Build time: %.2f seconds' % (time() - t0)
 
         outputs = emulate_wrt_r(gp,xi,em_params,rpoints,y_param=y_param,y_points=yp)
         outputs = np.stack(outputs)
