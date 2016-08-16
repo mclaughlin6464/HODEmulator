@@ -193,7 +193,6 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
 
 def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     '''Actually build the emulator. '''
-    import psutil
     from time import time
     ndim = len(PARAMS) - len(fixed_params) + 1  # include r
     t0 = time() 
