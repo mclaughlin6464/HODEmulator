@@ -12,6 +12,7 @@ import george
 from george.kernels import *
 
 from allCorrFunc import RBINS
+from doBatchCalls import BOUNDS, N_PER_DIM
 
 DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
 NBINS = len(RBINS) - 1
@@ -21,13 +22,13 @@ NBINS = len(RBINS) - 1
 PARAMS = ['logMmin', 'sigma_logM', 'logM0', 'logM1', 'alpha', 'f_c']
 #The optimization struggles in higher dimensions
 #These are values gleaned from lower dims, good guesses.
-#INITIAL_GUESSES = {'amp': 0.481, 'logMmin':0.1349,'sigma_logM':0.089,
-#                   'logM0': 2.0, 'logM1':0.204, 'alpha':0.039,
-#                   'f_c':0.041, 'r':0.040}
+INITIAL_GUESSES = {'amp': 0.481, 'logMmin':0.1349,'sigma_logM':0.089,
+                   'logM0': 2.0, 'logM1':0.204, 'alpha':0.039,
+                   'f_c':0.041, 'r':0.040}
 
-INITIAL_GUESSES = {'amp':6, 'r':0.03}
+INITIAL_GUESSES_BIAS = {'amp':6, 'r':0.03}
 for p in PARAMS:
-    INITIAL_GUESSES[p] = 0.03
+    INITIAL_GUESSES_BIAS[p] = 0.03
 
 #TODO Harcoding in bias for now, which is very lazy
 #I should load it in somewhere, presumably by cosmology in the future.
@@ -193,57 +194,83 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
 def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     '''Actually build the emulator. '''
 
+    from time import time
     ndim = len(PARAMS) - len(fixed_params) + 1  # include r
+    t0 = time() 
     x, y, y_cov = get_training_data(fixed_params, directory, bias)
+    print 'Get Data: %.2f'%(time()-t0)
 
     y_hat = y.mean()
     y-=y_hat
+
+    ig = INITIAL_GUESSES_BIAS if bias else INITIAL_GUESSES
     
     metric = []
     for p in PARAMS:
         if p not in fixed_params:
-            metric.append(INITIAL_GUESSES[p])
+            metric.append(ig[p])
 
-    metric.append(INITIAL_GUESSES['r'])
+    metric.append(ig['r'])
 
-    a = INITIAL_GUESSES['amp'] 
+    a = ig['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     gp = george.GP(kernel)
 
     # In the test module some of the errors are NaNs
     # TODO remove this in the main implementation
     # xi_err[np.isnan(xi_err)] = 1.0
+    t0 = time()
     gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
+    print 'Compute Time: %.2f'%(time()-t0)
 
-    print 'Initial Params: ', np.exp(gp.kernel[:])
+    print 'Initial Params: '
+    for p in gp.kernel:
+        print '%.6f'%np.exp(p)
+    print 
+    from time import time
 
     # Should put that in a doc somewhere
 
     def nll(p):
+        t0 = time()
         # Update the kernel parameters and compute the likelihood.
         # params are log(a) and log(m)
         gp.kernel[:] = p
         ll = gp.lnlikelihood(y, quiet=True)
 
         # The scipy optimizer doesn't play well with infinities.
+        print 'Nll: %.2f'%(time()-t0)
         return -ll if np.isfinite(ll) else 1e25
 
     # And the gradient of the objective function.
     def grad_nll(p):
         # Update the kernel parameters and compute the likelihood.
+        from time import time
+        t0 = time()
         gp.kernel[:] = p
-        return -gp.grad_lnlikelihood(y, quiet=True)
+        output = -gp.grad_lnlikelihood(y, quiet=True)
+        print 'Grad Nll: %.2f'%(time()-t0)
+        #return -gp.grad_lnlikelihood(y, quiet=True)
+        return output
 
     p0 = gp.kernel.vector
-    results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
+    #results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
+    t0 = time()
+    results = op.minimize(nll, p0, jac=grad_nll, options={'maxiter':10})# method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)],
+            #options={'maxiter':10})
+    print 'Training time: %.2f s'%(time()-t0)
 
     if not results.success:
         warnings.warn('WARNING: GP Optimization failed!')
-        print 'GP Optimization Failed.'
+        print 'GP Optimization Failed.'#The warning doesn't warn more than once. 
 
     gp.kernel[:] = results.x
-    print 'GP Params: ', np.exp(results.x)
-
+    print 'GP Params: '
+    for p in results.x:
+        print '%.6f'%np.exp(p)
+    print
+    print 'Computed: %s'%gp.computed
+    gp.compute(x, np.sqrt(np.diag(y_cov)))
     return gp, y+y_hat, y_cov
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
@@ -269,7 +296,7 @@ def emulate(gp, em_y, em_params, x_param, x_points, y_param=None, y_points=None)
         # We only have to vary one parameter, as given by x_points
         t_list = []
         for p in PARAMS:
-            if p in fixed_params:
+            if p in em_params:
                 t_list.append(np.ones_like(x_points) * em_params[p])
             elif p == x_param:
                 t_list.append(x_points)
@@ -331,7 +358,7 @@ if __name__ == '__main__':
     from time import time
 
     y_param = 'logMmin'
-    ep = ['sigma_logM', 'logM0', 'logM1', 'f_c', 'alpha']
+    ep = ['sigma_logM', 'logM0', 'logM1', 'alpha', 'f_c'] #NOte removed f_c
 
     emulation_point = [('f_c', 0.233),
                        ('logM0', 12.0), ('sigma_logM', 0.533), ('alpha', 1.083),
@@ -339,7 +366,11 @@ if __name__ == '__main__':
 
     fiducial_point = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02,
                       'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
-    for i in xrange(5):
+
+    yp = np.linspace(BOUNDS[y_param][0],BOUNDS[y_param][1], num=N_PER_DIM)
+
+    rpoints = np.linspace(-1, 1.5, 200)
+    for i in xrange(len(ep)):
         fixed_params = {key: val for key, val in emulation_point}
 
         em_params = {}
@@ -357,15 +388,19 @@ if __name__ == '__main__':
         gp,xi,xi_cov = build_emulator(fixed_params)
         print 'Build time: %.2f seconds'%(time()-t0)
 
-        outputs = emulate_wrt_r(gp,xi,em_params, RBINS)
+        outputs = emulate_wrt_r(gp,xi,em_params,rpoints,y_param=y_param,y_points=yp)
+        outputs = np.stack(outputs)
         print 'Total time: %.2f seconds'%(time()-t0)
-
+        
         plot_outputs = get_plot_data(em_params, fixed_params)
+        plot_outputs = np.stack(plot_outputs)#.reshape((-1,3))
 
         output_dir = '/u/ki/swmclau2/des/EmulatorTest'
-        np.savetxt(path.join(output_dir, 'output_%d.npy'%i), outputs)
-        np.savetxt(path.join(output_dir, 'plot_output_%d.npy'%i), plot_outputs)
+        np.save(path.join(output_dir, 'output_%d.npy'%i), outputs)
+        np.save(path.join(output_dir, 'plot_output_%d.npy'%i), plot_outputs)
         print '*-'*30
+        break
+    '''
 
     fixed_params = {key: val for key, val in emulation_point}
 
@@ -381,12 +416,14 @@ if __name__ == '__main__':
     gp, xi, xi_cov = build_emulator(fixed_params)
     print 'Build time: %.2f seconds' % (time() - t0)
 
-    outputs = emulate_wrt_r(gp, xi, em_params, RBINS)
+    outputs = emulate_wrt_r(gp, xi, em_params, rpoints, y_param=y_param,y_points=yp)
     print 'Total time: %.2f seconds' % (time() - t0)
 
     plot_outputs = get_plot_data(em_params, fixed_params)
+    outputs = np.stack(outputs)
+    plot_outputs = np.stack(plot_outputs).reshape((-1,3))
 
     output_dir = '/u/ki/swmclau2/des/EmulatorTest'
-    np.savetxt(path.join(output_dir, 'output_all.npy' % i), outputs)
-    np.savetxt(path.join(output_dir, 'plot_output_all.npy' % i), plot_outputs)
-
+    np.savetxt(path.join(output_dir, 'output_all.npy'), outputs)
+    np.savetxt(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
+    '''
