@@ -193,7 +193,7 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
 
 def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     '''Actually build the emulator. '''
-
+    import psutil
     from time import time
     ndim = len(PARAMS) - len(fixed_params) + 1  # include r
     t0 = time() 
@@ -362,7 +362,7 @@ if __name__ == '__main__':
     from time import time
 
     y_param = 'logMmin'
-    ep = ['sigma_logM', 'logM0', 'logM1', 'alpha', 'f_c'] #NOte removed f_c
+    ep = ['sigma_logM', 'logM0', 'logM1', 'alpha']#, 'f_c'] 
 
     emulation_point = [('f_c', 0.233),
                        ('logM0', 12.0), ('sigma_logM', 0.533), ('alpha', 1.083),
@@ -392,9 +392,9 @@ if __name__ == '__main__':
         gp,xi,xi_cov = build_emulator(fixed_params)
         print 'Build time: %.2f seconds'%(time()-t0)
 
-        t0 = time()
-        #train_emulator(gp, xi)
-        print 'Build time: %.2f seconds' % (time() - t0)
+        t1 = time()
+        train_emulator(gp, xi)
+        print 'Train time: %.2f seconds' % (time() - t1)
 
         outputs = emulate_wrt_r(gp,xi,em_params,rpoints,y_param=y_param,y_points=yp)
         outputs = np.stack(outputs)
@@ -407,7 +407,6 @@ if __name__ == '__main__':
         np.save(path.join(output_dir, 'output_%d.npy'%i), outputs)
         np.save(path.join(output_dir, 'plot_output_%d.npy'%i), plot_outputs)
         print '*-'*30
-        break
     '''
 
     fixed_params = {key: val for key, val in emulation_point}
@@ -423,6 +422,10 @@ if __name__ == '__main__':
     t0 = time()
     gp, xi, xi_cov = build_emulator(fixed_params)
     print 'Build time: %.2f seconds' % (time() - t0)
+
+    t1 = time()
+    #train_emulator(gp, xi)
+    print 'Train time: %.2f seconds' % (time() - t1)
 
     outputs = emulate_wrt_r(gp, xi, em_params, rpoints, y_param=y_param,y_points=yp)
     print 'Total time: %.2f seconds' % (time() - t0)
