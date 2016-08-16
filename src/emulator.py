@@ -211,6 +211,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 
     metric.append(ig['r'])
 
+
     a = ig['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     gp = george.GP(kernel)
