@@ -374,6 +374,11 @@ if __name__ == '__main__':
     yp = np.linspace(BOUNDS[y_param][0],BOUNDS[y_param][1], num=N_PER_DIM)
 
     rpoints = np.linspace(-1, 1.5, 200)
+
+    RBIN_CENTERS = ((RBINS[:-1] + RBINS[1:]) / 2)
+    flip_rpoints = np.log10(RBIN_CENTERS)
+    flip_yp = np.linspace(BOUNDS[y_param][0], BOUNDS[y_param][1], num=200)
+    '''
     for i in xrange(len(ep)):
         fixed_params = {key: val for key, val in emulation_point}
 
@@ -399,12 +404,16 @@ if __name__ == '__main__':
         outputs = emulate_wrt_r(gp,xi,em_params,rpoints,y_param=y_param,y_points=yp)
         outputs = np.stack(outputs)
         print 'Total time: %.2f seconds'%(time()-t0)
+
+        flip_outputs = emulate(gp, xi, em_params, x_param=y_param, x_points=flip_yp, y_param='r', y_points=flip_rpoints)
+        flip_outputs = np.stack(flip_outputs)
         
         plot_outputs = get_plot_data(em_params, fixed_params)
         plot_outputs = np.stack(plot_outputs)#.reshape((-1,3))
 
         output_dir = '/u/ki/swmclau2/des/EmulatorTest'
         np.save(path.join(output_dir, 'output_%d.npy'%i), outputs)
+        np.save(path.join(output_dir, 'flip_output_%d.npy'%i), flip_outputs)
         np.save(path.join(output_dir, 'plot_output_%d.npy'%i), plot_outputs)
         print '*-'*30
     '''
@@ -424,17 +433,20 @@ if __name__ == '__main__':
     print 'Build time: %.2f seconds' % (time() - t0)
 
     t1 = time()
-    #train_emulator(gp, xi)
+    train_emulator(gp, xi)
     print 'Train time: %.2f seconds' % (time() - t1)
 
-    outputs = emulate_wrt_r(gp, xi, em_params, rpoints, y_param=y_param,y_points=yp)
+    outputs = emulate_wrt_r(gp, xi, em_params, rpoints, y_param=y_param, y_points=yp)
+    outputs = np.stack(outputs)
     print 'Total time: %.2f seconds' % (time() - t0)
 
+    flip_outputs = emulate(gp, xi, em_params, x_param=y_param, x_points=flip_yp, y_param='r', y_points=flip_rpoints)
+    flip_outputs = np.stack(flip_outputs)
+
     plot_outputs = get_plot_data(em_params, fixed_params)
-    outputs = np.stack(outputs)
-    plot_outputs = np.stack(plot_outputs).reshape((-1,3))
+    plot_outputs = np.stack(plot_outputs)  # .reshape((-1,3))
 
     output_dir = '/u/ki/swmclau2/des/EmulatorTest'
-    np.savetxt(path.join(output_dir, 'output_all.npy'), outputs)
-    np.savetxt(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
-    '''
+    np.save(path.join(output_dir, 'output_all.npy'), outputs)
+    np.save(path.join(output_dir, 'flip_output_all.npy'), flip_outputs)
+    np.save(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
