@@ -266,6 +266,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 
     gp.kernel[:] = results.x
     print 'GP Params: '
+
     for p in results.x:
         print '%.6f'%np.exp(p)
     print
