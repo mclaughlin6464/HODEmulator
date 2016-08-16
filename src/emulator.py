@@ -393,7 +393,7 @@ if __name__ == '__main__':
         print 'Build time: %.2f seconds'%(time()-t0)
 
         t0 = time()
-        train_emulator(gp, xi)
+        #train_emulator(gp, xi)
         print 'Build time: %.2f seconds' % (time() - t0)
 
         outputs = emulate_wrt_r(gp,xi,em_params,rpoints,y_param=y_param,y_points=yp)
