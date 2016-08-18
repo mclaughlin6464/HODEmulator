@@ -113,7 +113,7 @@ def send_calls(cube):
     for idx, point in enumerate(cube):
         params = dict(zip(PARAMS, point))
         jobname = 'Emulator_lhc_%3d' % idx
-
+        print jobname
         command = make_command(jobname, params)
         call(command, shell=system == 'sherlock')
         break
