@@ -16,8 +16,8 @@ from emulator import PARAMS
 # TODO put all this into a config!
 # not happy about copying this code
 # need to put this into configs so this isn't an issue.
-QUEUE = 'bulletmpi'
-TIME = 24  # hours
+QUEUE = 'kipac-ibq'#'bulletmpi'
+TIME = 4  # hours
 system = 'ki-ls'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorLHC/'
@@ -34,15 +34,11 @@ def make_cube(M=500):
     # allow the user to pass in arbitrary dimensions. Probably not necessary.
     np.random.seed(int(time()))
 
-    # ranges= []
-    # for p in PARAMS:
-    #   ranges.append(np.linspace(BOUNDS[p][0], BOUNDS[p][1], num=M)) )
-    #   np.random.shuffle(ranges[-1])
-    # return np.stack(ranges).T
-
-    # Unreadable, but i'm a code golf champion.
-    return np.stack([np.random.shuffle(np.linspace(BOUNDS[p][0], BOUNDS[p][1], num=M)) for p in PARAMS]).T
-
+    ranges= []
+    for p in PARAMS:
+        ranges.append(np.linspace(BOUNDS[p][0], BOUNDS[p][1], num=M)) 
+        np.random.shuffle(ranges[-1])
+    return np.stack(ranges).T
 
 def make_kils_command(jobname, params, queue=QUEUE):
     logfile = jobname + '.out'
@@ -112,8 +108,9 @@ make_command = make_kils_command if system == 'ki-ls' else make_sherlock_command
 def send_calls(cube):
     for idx, point in enumerate(cube):
         params = dict(zip(PARAMS, point))
-        jobname = 'Emulator_lhc_%3d' % idx
+        jobname = 'Emulator_lhc_%03d' % idx
         print jobname
+        print params
         command = make_command(jobname, params)
         call(command, shell=system == 'sherlock')
         break

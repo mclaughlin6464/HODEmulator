@@ -154,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('outputdir', type=str,
                         help='The directory to store the outputs of the calculations.')
     parser.add_argument('--test', action='store_true', help='Create fake data with a similar structure for testing.')
-    parser.add_argument('--id', action='store_const', type=int,default=None, help='The job id for this call.')
+    parser.add_argument('--id',type=int,default=None, help='The job id for this call.')
 
     for param in BOUNDS.iterkeys():
         parser.add_argument(''.join(['--', param])) #no help scripts #YOLO
