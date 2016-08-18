@@ -21,7 +21,7 @@ REDSHIFT = 0.5#0.0
 
 RBIN_CENTERS = (RBINS[1:] + RBINS[:-1]) / 2
 
-def paramCube(outputdir, fixed_params={}, n_per_dim=4):
+def paramCube(outputdir, fixed_params={}, n_per_dim=4, id_no=None):
     if type(n_per_dim) is int:
         n_per_dim = {key: n_per_dim for key in BOUNDS.iterkeys()}
 
@@ -36,6 +36,12 @@ def paramCube(outputdir, fixed_params={}, n_per_dim=4):
             values[param] = np.linspace(BOUNDS[param][0], BOUNDS[param][1], num=n_per_dim[param])
 
     n_total = np.prod(n_per_dim.values())
+    if n_total == 1: #only one, we can skip all this stuff.
+        calc_galaxy_autocorr(SIMNAME, 1 / (1 + REDSHIFT),
+                             path.join(outputdir,'Emulator_lhc_'+ '%03d'%id_no if id_no is not None else 'Emulator'),
+                             params=fixed_params, do_jackknife=True, Lbox=400, npart=2048)
+        return
+
     points = [{} for i in xrange(n_total)]
     fixed_base = '_'.join('%s%.2f' % (key, val) for key, val in fixed_params.iteritems()) + '_'
     outbase = [fixed_base for i in xrange(n_total)]
@@ -148,6 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('outputdir', type=str,
                         help='The directory to store the outputs of the calculations.')
     parser.add_argument('--test', action='store_true', help='Create fake data with a similar structure for testing.')
+    parser.add_argument('--id', action='store_const', type=int,default=None, help='The job id for this call.')
 
     for param in BOUNDS.iterkeys():
         parser.add_argument(''.join(['--', param])) #no help scripts #YOLO
@@ -158,6 +165,8 @@ if __name__ == '__main__':
 
     outputdir = args['outputdir']
     del args['outputdir']
+    id_no = args['id']
+    del args['id']
     for key in args.keys():
         if args[key] is not None:
             args[key] = float(args[key])
@@ -168,6 +177,6 @@ if __name__ == '__main__':
     #leave default nperdim for now..
     print args
     if not args['test']:
-        paramCube(outputdir, fixed_params=args)
+        paramCube(outputdir, fixed_params=args, id_no=id_no)
     else:
         testCube(outputdir, fixed_params=args)
