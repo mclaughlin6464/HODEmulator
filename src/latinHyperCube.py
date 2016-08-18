@@ -117,3 +117,7 @@ def send_calls(cube):
         command = make_command(jobname, params)
         call(command, shell=system == 'sherlock')
         break
+
+if __name__ == '__main__' :
+    cube = make_cube()
+    send_calls(cube)
