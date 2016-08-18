@@ -20,11 +20,11 @@ QUEUE = 'bulletmpi'
 TIME = 24  # hours
 system = 'ki-ls'
 if system == 'ki-ls':
-    outputdir = '/u/ki/swmclau2/des/EmulatorData/'
+    outputdir = '/u/ki/swmclau2/des/EmulatorLHC/'
     # outputdir = '/u/ki/swmclau2/des/TestData/'
 
 elif system == 'sherlock':
-    outputdir = '/home/swmclau2/scratch/EmulatorData/'
+    outputdir = '/home/swmclau2/scratch/EmulatorLHC/'
 
 
 def make_cube(M=500):

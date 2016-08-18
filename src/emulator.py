@@ -211,7 +211,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     a = ig['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
     #gp = george.GP(kernel)
-    gp = george.GP(kernel, solver=george.HODLRSolver)
+    gp = george.GP(kernel, solver=george.HODLRSolver, nleaf=x.shape[0]+1,tol=1e-18)
 
     # In the test module some of the errors are NaNs
     # TODO remove this in the main implementation
@@ -260,7 +260,7 @@ def train_emulator(gp, y):
     p0 = gp.kernel.vector
     #results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
     t0 = time()
-    results = op.minimize(nll, p0, jac=grad_nll,tol=1e-6)# method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)],options={'maxiter':50})
+    results = op.minimize(nll, p0, jac=grad_nll, method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)])#,options={'maxiter':50})
     print 'Training time: %.2f s'%(time()-t0)
 
     if not results.success:
@@ -268,12 +268,12 @@ def train_emulator(gp, y):
         print 'GP Optimization Failed.'#The warning doesn't warn more than once. 
 
     gp.kernel[:] = results.x
+    gp.recompute()
     print 'GP Params: '
     for p in results.x:
         print '%.6f'%np.exp(p)
     print
     print 'Computed: %s'%gp.computed
-    gp.recompute()
     y+=y_hat
     return #don't need to return anything!
 
