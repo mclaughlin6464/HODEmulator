@@ -199,9 +199,6 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     x, y, y_cov = get_training_data(fixed_params, directory, bias)
     print 'Get Data: %.2f'%(time()-t0)
 
-    y_hat = y.mean()
-    y-=y_hat
-
     ig = INITIAL_GUESSES_BIAS if bias else INITIAL_GUESSES
     
     metric = []
@@ -211,10 +208,10 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 
     metric.append(ig['r'])
 
-
     a = ig['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
-    gp = george.GP(kernel)
+    #gp = george.GP(kernel)
+    gp = george.GP(kernel, solver=george.HODLRSolver)
 
     # In the test module some of the errors are NaNs
     # TODO remove this in the main implementation
@@ -228,12 +225,15 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
         print '%.6f'%np.exp(p)
     print 
 
-    return gp, y+y_hat, y_cov
+    return gp, y, y_cov
 
 def train_emulator(gp, y):
     '''Attempt to optimize the emulator!'''
+    from time import time
     y_hat = y.mean()
     y -= y_hat
+
+    ndim = gp._x.shape[1]
 
     def nll(p):
         t0 = time()
@@ -260,8 +260,7 @@ def train_emulator(gp, y):
     p0 = gp.kernel.vector
     #results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
     t0 = time()
-    results = op.minimize(nll, p0, jac=grad_nll, options={'maxiter':10})# method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)],
-            #options={'maxiter':10})
+    results = op.minimize(nll, p0, jac=grad_nll,tol=1e-6)# method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)],options={'maxiter':50})
     print 'Training time: %.2f s'%(time()-t0)
 
     if not results.success:
@@ -275,6 +274,7 @@ def train_emulator(gp, y):
     print
     print 'Computed: %s'%gp.computed
     gp.recompute()
+    y+=y_hat
     return #don't need to return anything!
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
@@ -319,6 +319,7 @@ def emulate(gp, em_y, em_params, x_param, x_points, y_param=None, y_points=None)
 
         # TODO return std or cov?
         # TODO return r's too? Just have those be passed in?
+        em_y+=em_y_hat
         return mu+em_y_hat, np.diag(cov)
     else:
         output = []
@@ -349,6 +350,7 @@ def emulate(gp, em_y, em_params, x_param, x_points, y_param=None, y_points=None)
 
             mu, cov = gp.predict(em_y, t)
             output.append((mu+em_y_hat, np.sqrt(np.diag(cov))))
+        em_y+=em_y_hat
         return output
 
 
@@ -427,13 +429,14 @@ if __name__ == '__main__':
         del fixed_params[param]
 
     del fixed_params[y_param]
+    bias = True 
 
     t0 = time()
-    gp, xi, xi_cov = build_emulator(fixed_params)
+    gp, xi, xi_cov = build_emulator(fixed_params, bias = bias)
     print 'Build time: %.2f seconds' % (time() - t0)
 
     t1 = time()
-    train_emulator(gp, xi)
+    #train_emulator(gp, xi)
     print 'Train time: %.2f seconds' % (time() - t1)
 
     outputs = emulate_wrt_r(gp, xi, em_params, rpoints, y_param=y_param, y_points=yp)
@@ -443,10 +446,15 @@ if __name__ == '__main__':
     flip_outputs = emulate(gp, xi, em_params, x_param=y_param, x_points=flip_yp, y_param='r', y_points=flip_rpoints)
     flip_outputs = np.stack(flip_outputs)
 
-    plot_outputs = get_plot_data(em_params, fixed_params)
+    plot_outputs = get_plot_data(em_params, fixed_params,bias = bias)
     plot_outputs = np.stack(plot_outputs)  # .reshape((-1,3))
 
     output_dir = '/u/ki/swmclau2/des/EmulatorTest'
-    np.save(path.join(output_dir, 'output_all.npy'), outputs)
-    np.save(path.join(output_dir, 'flip_output_all.npy'), flip_outputs)
-    np.save(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
+    if not bias:
+        np.save(path.join(output_dir, 'output_all.npy'), outputs)
+        np.save(path.join(output_dir, 'flip_output_all.npy'), flip_outputs)
+        np.save(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
+    else:
+        np.save(path.join(output_dir, 'bias_output_all.npy'), outputs)
+        np.save(path.join(output_dir, 'bias_flip_output_all.npy'), flip_outputs)
+        np.save(path.join(output_dir, 'bias_plot_output_all.npy'), plot_outputs)
