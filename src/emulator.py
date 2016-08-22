@@ -14,7 +14,8 @@ from george.kernels import *
 from allCorrFunc import RBINS
 from doBatchCalls import BOUNDS, N_PER_DIM
 
-DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
+#DIRECTORY = '/u/ki/swmclau2/des/EmulatorData/'
+DIRECTORY = '/u/ki/swmclau2/des/EmulatorLHC/'
 NBINS = len(RBINS) - 1
 # In general, the params don't need to be ordered
 # However, at this final step consistancy is necessary.
@@ -210,14 +211,16 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 
     a = ig['amp'] 
     kernel = a * ExpSquaredKernel(metric, ndim=ndim)
-    #gp = george.GP(kernel)
-    gp = george.GP(kernel, solver=george.HODLRSolver, nleaf=x.shape[0]+1,tol=1e-18)
+    gp = george.GP(kernel)
+    #gp = george.GP(kernel, solver=george.HODLRSolver, nleaf=x.shape[0]+1,tol=1e-18)
 
     # In the test module some of the errors are NaNs
     # TODO remove this in the main implementation
     # xi_err[np.isnan(xi_err)] = 1.0
     t0 = time()
-    gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
+    #gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
+    #trying my poisson error estimator
+    gp.compute(x, np.sqrt(1+y))
     print 'Compute Time: %.2f'%(time()-t0)
 
     print 'Initial Params: '

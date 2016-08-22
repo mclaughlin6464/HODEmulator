@@ -29,7 +29,8 @@ print 'CORRFUNC: %s' % CORRFUNC
 MIN_PTCL = 200
 PI_MAX = 40
 
-RBINS = np.delete(np.logspace(-1, 1.6, 20), [1]) #make the first bin 2x as big.
+RBINS = np.delete(np.logspace(-0.8, 1.6, 15), [1,3]) #make the first bin 2x as big.
+#Add an extra small bin to throw out later
 
 SF_TOLERANCE = 0.05  # tolerance within a passed in scale factor we'll use.
 
@@ -136,8 +137,8 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=True, min_ptcl=MIN_P
 
     # TODO N procs
     if do_jackknife:
-        Nrands = 10 
-        Nsub = 10 
+        Nrands = 5 
+        Nsub = 5 
         randoms = np.random.random(
             (pos.shape[0] * Nrands, 3)) * model.mock.Lbox * cat.h  # Solution to NaNs: Just fuck me up with randoms
         xi_all, xi_cov = tpcf_jackknife(pos * cat.h, randoms, rbins, period=model.mock.Lbox * cat.h,

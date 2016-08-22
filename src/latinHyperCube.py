@@ -16,8 +16,8 @@ from emulator import PARAMS
 # TODO put all this into a config!
 # not happy about copying this code
 # need to put this into configs so this isn't an issue.
-QUEUE = 'kipac-ibq'#'bulletmpi'
-TIME = 4  # hours
+QUEUE = 'bulletmpi'
+TIME = 24  # hours
 system = 'ki-ls'
 if system == 'ki-ls':
     outputdir = '/u/ki/swmclau2/des/EmulatorLHC/'
@@ -109,11 +109,8 @@ def send_calls(cube):
     for idx, point in enumerate(cube):
         params = dict(zip(PARAMS, point))
         jobname = 'Emulator_lhc_%03d' % idx
-        print jobname
-        print params
         command = make_command(jobname, params)
         call(command, shell=system == 'sherlock')
-        break
 
 if __name__ == '__main__' :
     cube = make_cube()

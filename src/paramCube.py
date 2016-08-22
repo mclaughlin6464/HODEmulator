@@ -160,13 +160,14 @@ if __name__ == '__main__':
         parser.add_argument(''.join(['--', param])) #no help scripts #YOLO
 
     args = vars(parser.parse_args())
-    #test = args['test']
-    #del args['test']
 
+    test = args['test']
+    del args['test']
     outputdir = args['outputdir']
     del args['outputdir']
     id_no = args['id']
     del args['id']
+
     for key in args.keys():
         if args[key] is not None:
             args[key] = float(args[key])
@@ -176,7 +177,7 @@ if __name__ == '__main__':
     #pretty smart if i say so myself
     #leave default nperdim for now..
     print args
-    if not args['test']:
+    if not test:
         paramCube(outputdir, fixed_params=args, id_no=id_no)
     else:
         testCube(outputdir, fixed_params=args)
