@@ -36,7 +36,7 @@ def make_cube(M=500):
 
     ranges= []
     for p in PARAMS:
-        ranges.append(np.linspace(BOUNDS[p][0], BOUNDS[p][1], num=M)) 
+        ranges.append(np.linspace(BOUNDS[p][0], BOUNDS[p][1], num=M))
         np.random.shuffle(ranges[-1])
     return np.stack(ranges).T
 

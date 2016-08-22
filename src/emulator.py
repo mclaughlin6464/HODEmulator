@@ -56,11 +56,11 @@ def file_reader(corr_file, cov_file):
 
     return params, r, xi, cov
 
-
-def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
+#Fixing params is not possible with the LHC
+def get_training_data(directory=DIRECTORY, bias=False):
     '''load the GP's x,y, and yerr from the output of paramCube'''
-    corr_files = sorted(glob(path.join(DIRECTORY, '*corr*.npy')))
-    cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
+    corr_files = sorted(glob(path.join(directory, '*corr*.npy')))
+    cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files) * NBINS  # each file contains NBINS points in r, and each file is a 6-d point
 
     varied_params = set(PARAMS) - set(fixed_params.keys())
@@ -78,14 +78,9 @@ def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
     for idx, (corr_file, cov_file) in enumerate(izip(corr_files, cov_files)):
         params, r, xi, cov = file_reader(corr_file, cov_file)
 
-        # skip values that aren't where we've fixed them to be.
-        # It'd be nice to do this before the file I/O. Not possible without putting all info in the filename.
-        # or, a more nuanced file structure
-        #TODO check if a fixed_param is not one of the options
-        if any(params[key] != val for key, val in fixed_params.iteritems()):
-            continue
-
         if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
+            #TODO I think some of the small bins might all be NaNs, but i'm throwing them out anyway.
+            #May have to change the procedure here.
             if not warned:
                 warnings.warn('WARNING: NaN detected. Skipping point in %s' % cov_file)
                 warned = True
@@ -100,8 +95,6 @@ def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
         file_params = []
         #NOTE could do a param ordering here
         for p in PARAMS:
-            if p in fixed_params:
-                continue
             file_params.append(np.ones((NBINS,)) * params[p])
 
         file_params.append(np.log10(r))
@@ -125,7 +118,6 @@ def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
         print '%d Points used for training.'%num_used
 
     #print '\nSkipped %.2f %% of points due to NaNs.'%(100.0*(num_skipped)/(num_used+num_skipped))
-    #TODO warning is len==0
 
     # remove rows that were skipped due to the fixed thing
     # NOTE: HACK
@@ -134,13 +126,14 @@ def get_training_data(fixed_params={}, directory=DIRECTORY, bias=False):
 
     return x[zeros_slice], y[zeros_slice], ycov
 
+#Not sure this will work at all in an LHC scheme.
 def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
     '''Load truths from the output of paramCube for plotting alongside the GP emulations.'''
 
     assert len(em_params)+len(fixed_params) +1 == len(PARAMS)
 
-    corr_files = sorted(glob(path.join(DIRECTORY, '*corr*.npy')))
-    cov_files = sorted(glob(path.join(DIRECTORY, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
+    corr_files = sorted(glob(path.join(directory, '*corr*.npy')))
+    cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files)# each file contains NBINS points in r, and each file is a 6-d point
 
     log_r = np.zeros((npoints,NBINS ))
@@ -192,20 +185,19 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
 
     return log_r[zeros_slice], y[zeros_slice], y_err[zeros_slice] 
 
-def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
+def build_emulator(directory=DIRECTORY,bias = False):
     '''Actually build the emulator. '''
     from time import time
-    ndim = len(PARAMS) - len(fixed_params) + 1  # include r
+    ndim = len(PARAMS) + 1  # include r
     t0 = time() 
-    x, y, y_cov = get_training_data(fixed_params, directory, bias)
+    x, y, y_cov = get_training_data(directory, bias)
     print 'Get Data: %.2f'%(time()-t0)
 
     ig = INITIAL_GUESSES_BIAS if bias else INITIAL_GUESSES
     
     metric = []
     for p in PARAMS:
-        if p not in fixed_params:
-            metric.append(ig[p])
+        metric.append(ig[p])
 
     metric.append(ig['r'])
 
@@ -214,13 +206,8 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
     gp = george.GP(kernel)
     #gp = george.GP(kernel, solver=george.HODLRSolver, nleaf=x.shape[0]+1,tol=1e-18)
 
-    # In the test module some of the errors are NaNs
-    # TODO remove this in the main implementation
-    # xi_err[np.isnan(xi_err)] = 1.0
     t0 = time()
-    #gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
-    #trying my poisson error estimator
-    gp.compute(x, np.sqrt(1+y))
+    gp.compute(x, np.sqrt(np.diag(y_cov)))  # NOTE I'm using a modified version of george!
     print 'Compute Time: %.2f'%(time()-t0)
 
     print 'Initial Params: '
@@ -233,7 +220,7 @@ def build_emulator(fixed_params={}, directory=DIRECTORY,bias = False):
 def train_emulator(gp, y):
     '''Attempt to optimize the emulator!'''
     from time import time
-    y_hat = y.mean()
+    y_hat = y.mean() # NOTE consider doing a copy here rather than modifying y directly
     y -= y_hat
 
     ndim = gp._x.shape[1]
@@ -261,9 +248,8 @@ def train_emulator(gp, y):
         return output
 
     p0 = gp.kernel.vector
-    #results = op.minimize(nll, p0, jac=grad_nll)#, method='Newton-CG')
     t0 = time()
-    results = op.minimize(nll, p0, jac=grad_nll, method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)])#,options={'maxiter':50})
+    results = op.minimize(nll, p0, jac=grad_nll)#, method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)])#,options={'maxiter':50})
     print 'Training time: %.2f s'%(time()-t0)
 
     if not results.success:
@@ -282,8 +268,6 @@ def train_emulator(gp, y):
 
 # unsure on the design here. I'd like to combin the x,y* into one thing each, but idk how that's easy
 # just having them be len(x)==1 dicts seems silly.
-# TODO clarity of log_xi, xi
-# TODO fixed params is different than the above; clarify
 def emulate(gp, em_y, em_params, x_param, x_points, y_param=None, y_points=None):
     # check that all params have been accounted for!
     # could wrap this in a try block to make it more informative
@@ -435,7 +419,7 @@ if __name__ == '__main__':
     bias = True 
 
     t0 = time()
-    gp, xi, xi_cov = build_emulator(fixed_params, bias = bias)
+    gp, xi, xi_cov = build_emulator(bias = bias)
     print 'Build time: %.2f seconds' % (time() - t0)
 
     t1 = time()
