@@ -63,7 +63,7 @@ def get_training_data(directory=DIRECTORY, bias=False):
     cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files) * NBINS  # each file contains NBINS points in r, and each file is a 6-d point
 
-    varied_params = set(PARAMS) - set(fixed_params.keys())
+    varied_params = set(PARAMS)# - set(fixed_params.keys())
 
     ndim = len(varied_params) + 1  # lest we forget r
 
@@ -127,7 +127,7 @@ def get_training_data(directory=DIRECTORY, bias=False):
     return x[zeros_slice], y[zeros_slice], ycov
 
 #Not sure this will work at all in an LHC scheme.
-def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
+def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False,nbins=NBINS):
     '''Load truths from the output of paramCube for plotting alongside the GP emulations.'''
 
     assert len(em_params)+len(fixed_params) +1 == len(PARAMS)
@@ -136,9 +136,9 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
     cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files)# each file contains NBINS points in r, and each file is a 6-d point
 
-    log_r = np.zeros((npoints,NBINS ))
-    y = np.zeros((npoints,NBINS))
-    y_err = np.zeros((npoints,NBINS))
+    log_r = np.zeros((npoints,nbins ))
+    y = np.zeros((npoints,nbins))
+    y_err = np.zeros((npoints,nbins))
 
     warned = False
     num_skipped = 0
@@ -163,7 +163,7 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False):
             num_skipped += 1
             continue
 
-        assert NBINS == len(r)  # at least it'll throw an error if there's an issue.
+        assert nbins == len(r)  # at least it'll throw an error if there's an issue.
 
         num_used+=1
 

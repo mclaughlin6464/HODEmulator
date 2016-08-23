@@ -29,7 +29,7 @@ print 'CORRFUNC: %s' % CORRFUNC
 MIN_PTCL = 200
 PI_MAX = 40
 
-RBINS = np.delete(np.logspace(-0.8, 1.6, 15), [1,3]) #make the first bin 2x as big.
+RBINS = np.delete(np.logspace(-1.2, 1.6, 20), [1,3]) #make the first bin 2x as big.
 #Add an extra small bin to throw out later
 
 SF_TOLERANCE = 0.05  # tolerance within a passed in scale factor we'll use.
