@@ -7,7 +7,7 @@ import warnings
 from glob import glob
 import numpy as np
 import scipy.optimize as op
-from scipy.linalg import block_diag
+from scipy.linalg import block_diag, det, eigh
 import george
 from george.kernels import *
 
@@ -57,11 +57,11 @@ def file_reader(corr_file, cov_file):
     return params, r, xi, cov
 
 #Fixing params is not possible with the LHC
-def get_training_data(directory=DIRECTORY, bias=False):
+def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
     '''load the GP's x,y, and yerr from the output of paramCube'''
     corr_files = sorted(glob(path.join(directory, '*corr*.npy')))
     cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
-    npoints = len(corr_files) * NBINS  # each file contains NBINS points in r, and each file is a 6-d point
+    npoints = len(corr_files) * nbins# each file contains NBINS points in r, and each file is a 6-d point
 
     varied_params = set(PARAMS)# - set(fixed_params.keys())
 
@@ -81,13 +81,14 @@ def get_training_data(directory=DIRECTORY, bias=False):
         if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
             #TODO I think some of the small bins might all be NaNs, but i'm throwing them out anyway.
             #May have to change the procedure here.
+            print np.sum(np.isnan(cov))
             if not warned:
                 warnings.warn('WARNING: NaN detected. Skipping point in %s' % cov_file)
                 warned = True
             num_skipped += 1
             continue
 
-        assert NBINS == len(r)  # at least it'll throw an error if there's an issue.
+        assert nbins == len(r)  # at least it'll throw an error if there's an issue.
 
         num_used+=1
 
@@ -95,20 +96,29 @@ def get_training_data(directory=DIRECTORY, bias=False):
         file_params = []
         #NOTE could do a param ordering here
         for p in PARAMS:
-            file_params.append(np.ones((NBINS,)) * params[p])
+            file_params.append(np.ones((nbins,)) * params[p])
 
         file_params.append(np.log10(r))
 
-        x[idx * NBINS:(idx + 1) * NBINS, :] = np.stack(file_params).T
+        x[idx * nbins:(idx + 1) *nbins, :] = np.stack(file_params).T
         if bias:
-            y[idx * NBINS:(idx + 1) * NBINS] = xi/xi_mm
+            y[idx * nbins:(idx + 1) * nbins] = xi/xi_mm
             ycovs.append(cov/np.outer(xi_mm, xi_mm))
         else:
-            y[idx * NBINS:(idx + 1) * NBINS] = np.log10(xi)
+            y[idx * nbins:(idx + 1) * nbins] = np.log10(xi)
         # Approximately true, may need to revisit
         # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
             ycovs.append(
                 cov / (np.outer(xi, xi)*np.log(10)**2))  # I think this is right, extrapolating from the above.
+            #doing some voodoo on the cov mat.
+            '''
+            norm = ycovs[-1][0,0]
+            mat = ycovs[-1]/norm
+            w,v = eigh(mat)
+            w[w**2< np.sqrt(2.0/125)] = 0.5
+            new_mat = np.dot(v, np.dot(np.diag(w), v.T))
+            ycovs[-1] = new_mat*norm
+            '''
 
     ycov = block_diag(*ycovs)
     #ycov = np.sqrt(np.diag(ycov))
@@ -185,12 +195,13 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False,nbin
 
     return log_r[zeros_slice], y[zeros_slice], y_err[zeros_slice] 
 
-def build_emulator(directory=DIRECTORY,bias = False):
+#TODO figure out what to do about the nbins thing; i'm not happy with it.
+def build_emulator(directory=DIRECTORY,bias = False,nbins=NBINS):
     '''Actually build the emulator. '''
     from time import time
     ndim = len(PARAMS) + 1  # include r
     t0 = time() 
-    x, y, y_cov = get_training_data(directory, bias)
+    x, y, y_cov = get_training_data(directory, bias,nbins)
     print 'Get Data: %.2f'%(time()-t0)
 
     ig = INITIAL_GUESSES_BIAS if bias else INITIAL_GUESSES
@@ -249,7 +260,7 @@ def train_emulator(gp, y):
 
     p0 = gp.kernel.vector
     t0 = time()
-    results = op.minimize(nll, p0, jac=grad_nll)#, method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)])#,options={'maxiter':50})
+    results = op.minimize(nll, p0, jac=grad_nll, method='TNC', bounds = [(np.log(0.01), np.log(10)) for i in xrange(ndim+1)],options={'maxiter':50})
     print 'Training time: %.2f s'%(time()-t0)
 
     if not results.success:
