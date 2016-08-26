@@ -81,7 +81,6 @@ def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
         if np.any(np.isnan(cov)) or np.any(np.isnan(xi)):
             #TODO I think some of the small bins might all be NaNs, but i'm throwing them out anyway.
             #May have to change the procedure here.
-            print np.sum(np.isnan(cov))
             if not warned:
                 warnings.warn('WARNING: NaN detected. Skipping point in %s' % cov_file)
                 warned = True

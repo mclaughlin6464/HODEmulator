@@ -24,7 +24,7 @@ CORRFUNC = False
 from redMagicHOD import RedMagicCens, RedMagicSats, StepFuncCens, StepFuncSats
 from myCats import *
 
-print 'CORRFUNC: %s' % CORRFUNC
+#print 'CORRFUNC: %s' % CORRFUNC
 
 MIN_PTCL = 200
 PI_MAX = 40

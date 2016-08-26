@@ -19,11 +19,6 @@ def root_mean_square(N = None,truth_dir=TRUTH_DIR, **kwargs):
     #train_emulator(gp, y)
     print 'Emulator trained!'
 
-    #need to go to truth_dir
-    #TODO pass in a different Truth dir, possibly by modifying kwargs
-    if 'directory' in kwargs:
-        del kwargs['directory']
-
     corr_files = sorted(glob(path.join(truth_dir, '*corr*.npy')))
     cov_files = sorted(glob(path.join(truth_dir, '*cov*.npy')))
 
@@ -41,19 +36,51 @@ def root_mean_square(N = None,truth_dir=TRUTH_DIR, **kwargs):
         if idx%100 == 0:
             print 'Index: %d\tTime Elapsed:%.2f s'%(idx, time()-t0)
         params, r_centers, true_xi ,_ = file_reader(corr_files[idx], cov_files[idx])
-        print params
-        print np.any(np.isnan(true_xi))
         pred_log_xi, _ = emulate_wrt_r(gp, em_y, params, np.log10(r_centers) )
-        print np.any(np.isnan(pred_log_xi))
-        print np.any(np.isnan(np.mean((pred_log_xi-np.log10(true_xi))**2)))
-        RMSE = np.sqrt(np.mean((pred_log_xi-np.log10(true_xi))**2))
-        print np.isnan(RMSE) 
-        NRMSE = RMSE/true_xi.mean()
-        print np.isnan(NRMSE)
-        print '*-'*30
-        errors.append(NRMSE)
+
+        #print ((pred_log_xi-np.log10(true_xi))**2)
+        #print (np.log10(true_xi)**2) 
+        #print ((pred_log_xi-np.log10(true_xi))**2)/(np.log10(true_xi)**2) 
+        #print np.mean(((pred_log_xi-np.log10(true_xi))**2)/(np.log10(true_xi)**2)) 
+
+        RMSE = np.sqrt(np.mean(((pred_log_xi-np.log10(true_xi))**2)/(np.log10(true_xi)**2)))
+
+        errors.append(RMSE)
 
     return np.array(errors)
+
+def calcR2(N = None,truth_dir=TRUTH_DIR, **kwargs):
+    gp,em_y, _ = build_emulator(**kwargs)
+    print 'Emulator built!'
+    #train_emulator(gp, y)
+    print 'Emulator trained!'
+
+    corr_files = sorted(glob(path.join(truth_dir, '*corr*.npy')))
+    cov_files = sorted(glob(path.join(truth_dir, '*cov*.npy')))
+
+    np.random.seed(int(time()))
+
+    if N is None:
+        idxs = np.arange(len(corr_files))
+    else:
+        idxs = np.random.choice(len(corr_files), N, replace = False)
+
+    r2_vals= []
+    print 'Starting...'
+    t0 = time()
+    for idx in idxs:
+        if idx%100 == 0:
+            print 'Index: %d\tTime Elapsed:%.2f s'%(idx, time()-t0)
+        params, r_centers, true_xi ,_ = file_reader(corr_files[idx], cov_files[idx])
+        pred_log_xi, _ = emulate_wrt_r(gp, em_y, params, np.log10(r_centers) )
+
+        SSR = np.sum((pred_log_xi-np.log10(true_xi))**2)
+        SST = np.sum((np.log10(true_xi)-np.log10(true_xi).mean())**2)
+
+        r2_vals.append(1-SSR/SST)
+
+    return np.array(r2_vals)
+
 
 if __name__ == '__main__':
     from sys import argv
