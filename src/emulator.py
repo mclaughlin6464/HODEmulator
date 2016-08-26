@@ -57,8 +57,10 @@ def file_reader(corr_file, cov_file):
     return params, r, xi, cov
 
 #Fixing params is not possible with the LHC
-def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
+def get_training_data(directory=DIRECTORY, independent_variable='xi',nbins=NBINS):
     '''load the GP's x,y, and yerr from the output of paramCube'''
+    assert independent_variable in set(['xi', 'bias', 'r2xi'])
+
     corr_files = sorted(glob(path.join(directory, '*corr*.npy')))
     cov_files = sorted(glob(path.join(directory, '*cov*.npy')))  # since they're sorted, they'll be paired up by params.
     npoints = len(corr_files) * nbins# each file contains NBINS points in r, and each file is a 6-d point
@@ -100,10 +102,10 @@ def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
         file_params.append(np.log10(r))
 
         x[idx * nbins:(idx + 1) *nbins, :] = np.stack(file_params).T
-        if bias:
+        if independent_variable == 'bias':
             y[idx * nbins:(idx + 1) * nbins] = xi/xi_mm
             ycovs.append(cov/np.outer(xi_mm, xi_mm))
-        else:
+        elif independent_variable == 'xi':
             y[idx * nbins:(idx + 1) * nbins] = np.log10(xi)
         # Approximately true, may need to revisit
         # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
@@ -118,6 +120,9 @@ def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
             new_mat = np.dot(v, np.dot(np.diag(w), v.T))
             ycovs[-1] = new_mat*norm
             '''
+        else: #r2xi
+            y[idx * nbins:(idx + 1) * nbins] = xi*r*r
+            ycovs.append(cov*np.outer(r,r))#
 
     ycov = block_diag(*ycovs)
     #ycov = np.sqrt(np.diag(ycov))
@@ -136,8 +141,9 @@ def get_training_data(directory=DIRECTORY, bias=False,nbins=NBINS):
     return x[zeros_slice], y[zeros_slice], ycov
 
 #Not sure this will work at all in an LHC scheme.
-def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False,nbins=NBINS):
+def get_plot_data(em_params,fixed_params, directory=DIRECTORY, independent_variable = 'xi',nbins=NBINS):
     '''Load truths from the output of paramCube for plotting alongside the GP emulations.'''
+    assert independent_variable in set(['xi', 'bias', 'r2xi'])
 
     assert len(em_params)+len(fixed_params) +1 == len(PARAMS)
 
@@ -177,14 +183,17 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False,nbin
         num_used+=1
 
         log_r[idx] = np.log10(r) 
-        if bias:
+        if independent_variable == 'bias':
             y[idx] = xi/xi_mm
             y_err[idx] = np.sqrt(np.diag(cov))/(xi_mm)  # I think this is right, extrapolating from the above.
-        else:
+        elif independent_variable == 'xi':
             y[idx] = np.log10(xi)
             # Approximately true, may need to revisit
             # yerr[idx * NBINS:(idx + 1) * NBINS] = np.sqrt(np.diag(cov)) / (xi * np.log(10))
             y_err[idx] = np.sqrt(np.diag(cov))/(xi*np.log(10))  # I think this is right, extrapolating from the above.
+        else: #r2xi
+            y[idx] = xi*r*r
+            y_err[idx] = np.sqrt(np.diag(cov))*r  # I think this is right, extrapolating from the above.
 
 
     # remove rows that were skipped due to the fixed thing
@@ -195,15 +204,16 @@ def get_plot_data(em_params,fixed_params, directory=DIRECTORY, bias = False,nbin
     return log_r[zeros_slice], y[zeros_slice], y_err[zeros_slice] 
 
 #TODO figure out what to do about the nbins thing; i'm not happy with it.
-def build_emulator(directory=DIRECTORY,bias = False,nbins=NBINS):
+def build_emulator(directory=DIRECTORY,independent_variable = 'xi',nbins=NBINS):
     '''Actually build the emulator. '''
     from time import time
     ndim = len(PARAMS) + 1  # include r
     t0 = time() 
-    x, y, y_cov = get_training_data(directory, bias,nbins)
+    x, y, y_cov = get_training_data(directory, independent_variable,nbins)
     print 'Get Data: %.2f'%(time()-t0)
 
-    ig = INITIAL_GUESSES_BIAS if bias else INITIAL_GUESSES
+    #TODO have to make initial guesses dict now
+    ig = INITIAL_GUESSES_BIAS if independent_variable=='bias' else INITIAL_GUESSES
     
     metric = []
     for p in PARAMS:
@@ -426,10 +436,10 @@ if __name__ == '__main__':
         del fixed_params[param]
 
     del fixed_params[y_param]
-    bias = True 
+    independent_variable = 'xi'
 
     t0 = time()
-    gp, xi, xi_cov = build_emulator(bias = bias)
+    gp, xi, xi_cov = build_emulator(independent_variable = independent_variable)
     print 'Build time: %.2f seconds' % (time() - t0)
 
     t1 = time()
@@ -443,11 +453,11 @@ if __name__ == '__main__':
     flip_outputs = emulate(gp, xi, em_params, x_param=y_param, x_points=flip_yp, y_param='r', y_points=flip_rpoints)
     flip_outputs = np.stack(flip_outputs)
 
-    plot_outputs = get_plot_data(em_params, fixed_params,bias = bias)
+    plot_outputs = get_plot_data(em_params, fixed_params,independent_variable = independent_variable)
     plot_outputs = np.stack(plot_outputs)  # .reshape((-1,3))
 
     output_dir = '/u/ki/swmclau2/des/EmulatorTest'
-    if not bias:
+    if not independent_variable == 'bias':
         np.save(path.join(output_dir, 'output_all.npy'), outputs)
         np.save(path.join(output_dir, 'flip_output_all.npy'), flip_outputs)
         np.save(path.join(output_dir, 'plot_output_all.npy'), plot_outputs)
