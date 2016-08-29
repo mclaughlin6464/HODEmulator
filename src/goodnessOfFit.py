@@ -38,6 +38,10 @@ def root_mean_square(N = None,truth_dir=TRUTH_DIR, **kwargs):
         params, r_centers, true_xi ,_ = file_reader(corr_files[idx], cov_files[idx])
         pred_log_xi, _ = emulate_wrt_r(gp, em_y, params, np.log10(r_centers) )
 
+        #TODO delete me
+        true_xi = true_xi[:-1]
+        pred_log_xi = pred_log_xi[:-1]
+
         #print ((pred_log_xi-np.log10(true_xi))**2)
         #print (np.log10(true_xi)**2) 
         #print ((pred_log_xi-np.log10(true_xi))**2)/(np.log10(true_xi)**2) 
