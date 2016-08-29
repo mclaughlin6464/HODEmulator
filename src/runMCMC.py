@@ -28,18 +28,12 @@ def lnprior(theta):
             return -np.inf
     return 0
 
+#TODO change xi to something more generic
+def lnlike(theta, xi, rpoints, cov, gp, training_xi):
+    em_params = dict(zip(PARAMS, theta))
 
-def lnlike(theta, xi, cov, gp, training_xi, fp):
-    idx = 0
-    # a bit of a hack
-    # a way to combine the fixed and varying params in one spot.
-    for p in PARAMS:
-        if fp[p] is None:
-            fp[p] = theta[idx]
-        idx += 1
-
-    log_xi_em, err_em = emulate_wrt_r(gp, training_xi, fp, RBINS)
-    # TODO figure out how to use err_am
+    log_xi_em, err_em = emulate_wrt_r(gp, training_xi, em_params, rpoints)
+    # TODO figure out how to use err_em
     xi_em = 10 ** log_xi_em  # log to normal
     invcov = np.lingalg.inv(cov)
     delta_xi = xi - xi_em
@@ -54,32 +48,26 @@ def lnprob(theta, **args):
     return lp + lnlike(theta, **args)
 
 
-def run_mcmc(xi, cov, fixed_params={}):
+#TODO add bias, etc. options
+def run_mcmc(xi,rpoints, cov, **kwargs):
     nwalkers = 2000
-    nsteps = 200
-    nburn = 50  # TODO convergence measures
-    ndim = len(PARAMS) - len(fixed_params)
+    nsteps = 10
+    nburn = 0#50  # TODO convergence measures
+    ndim = len(PARAMS) +1
     num_threads = cpu_count()
 
-    assert all(x is None for x in (xi, cov)) or all(x is not None for x in (xi, cov))
     assert xi.shape[0] == cov.shape[0] and cov.shape[1] == cov.shape[0]
+    assert xi.shape[0] == rpoints.shape[0]
 
-    gp, training_xi = build_emulator(fixed_params)
+    gp, training_xi = build_emulator(**kwargs)
     # I'm not happy about how this works, but allows me to carry information into the liklihood
-    fp = {}
-    for p in PARAMS:
-        if p not in fp:
-            fp[p] = None
 
-    sampler = mc.EnsembleSampler(nwalkers, ndim, lnprob, threads=num_threads, args=(xi, cov, gp, training_xi, fp))
+    sampler = mc.EnsembleSampler(nwalkers, ndim, lnprob,
+                                 threads=num_threads, args=(xi,rpoints, cov, gp, training_xi))
 
     pos0 = np.zeros((nwalkers, ndim))
-    idx = 0
-    for p in PARAMS:
-        if p in fixed_params:
-            continue
+    for idx, p in enumerate(PARAMS):
         pos0[:, idx] = np.random.uniform(BOUNDS[p][0], BOUNDS[p][1], size = nwalkers)
-        idx+=1
 
     sampler.run_mcmc(pos0, nsteps)
 
@@ -87,3 +75,14 @@ def run_mcmc(xi, cov, fixed_params={}):
     chain = sampler.chain[:, nburn:, :].reshape((-1, ndim))
 
     return chain
+
+if __name__ == '__main__':
+    #TODO has this be argv
+    simname = 'chinchilla'
+    scale_factor = 1/(1+0.5) #z = 0.5
+    fiducial_point = {'logM0': 12.20, 'logM1': 13.7, 'alpha': 1.02,
+                      'logMmin': 12.1, 'f_c': 0.19, 'sigma_logM': 0.46}
+    xi, cov = mock_truth(simname, scale_factor,true_params=fiducial_point)
+    rpoints = (RBINS[:1]+RBINS[:-1])/2
+    chain = run_mcmc(xi, rpoints, cov)
+    print chain.mean(axis =1)
