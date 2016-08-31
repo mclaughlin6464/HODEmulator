@@ -157,7 +157,7 @@ def popAndCorr(halocat, model, cat, params={}, do_jackknife=True, min_ptcl=MIN_P
 
     else:
 
-        xi_all = tpcf(pos * cat.h, RBINS, period=model.mock.Lbox * cat.h, num_threads=cpu_count())
+        xi_all = tpcf(pos * cat.h, rbins, period=model.mock.Lbox * cat.h, num_threads=cpu_count())
 
     print 'Corr Calc Time: %.3f s' % (time() - t0)
     # halo_hostid = model.mock.galaxy_table['halo_id']

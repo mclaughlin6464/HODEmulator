@@ -9,8 +9,6 @@ import argparse
 from myCats import cat_dict
 from allCorrFunc import loadHaloAndModel, popAndCorr, RBINS,  MIN_PTCL
 from doBatchCalls import BOUNDS #i Need them in both places but it's smarter to ahve ti there.
-from guppy import hpy
-h = hpy()
 
 # TODO not hardcoding some of these? Depends on my use i guess.
 # Will have to see how i end up using this.
